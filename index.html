@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FCFCF9">
+<title>SG Bike Parking QR Finder</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230B0B0B'/%3E%3Cpath d='M4 4h11v11H4zM17 4h11v11H17zM4 17h11v11H4z' fill='%23FCFCF9'/%3E%3Cpath d='M6.5 6.5h6v6h-6zM19.5 6.5h6v6h-6zM6.5 19.5h6v6h-6z' fill='%230B0B0B'/%3E%3Cpath d='M8.5 8.5h2v2h-2zM21.5 8.5h2v2h-2zM8.5 21.5h2v2h-2z' fill='%23FCFCF9'/%3E%3Crect x='18' y='18' width='10' height='10' rx='2.5' fill='%23D85A30'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
+<meta name="apple-mobile-web-app-title" content="Bike QR">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5/index.min.css">
+<style>
+/* ============================================================
+   Aero design tokens (from aero-app-style.md)
+   ============================================================ */
+:root {
+  --ink: #0B0B0B;      --ink-700: #26262A;  --ink-500: #52525B;  --ink-300: #A1A1AA;
+  --action: #D85A30;   --action-700: #C24E27; --action-300: #ECA88F; --action-soft: #FDF3EF;
+  --status: #2E6BE6;   --status-700: #1D4CA6; --status-300: #9DBAF7; --status-soft: #EFF4FE;
+  --paper: #FCFCF9;    --surface: #FFFFFF;  --sunken: #FAFAF8;   --muted: #F4F4F5;
+  --border: #E4E4E7;   --border-strong: #D4D4D8;
+  --fg: #0B0B0B;       --fg-2: #52525B;     --fg-3: #71717A;
+  --danger: #DC2626;   --danger-strong: #B91C1C; --danger-soft: #FEF2F2;
+  --warning: #D97706;
+  --r-xs: 6px; --r-sm: 8px; --r-md: 10px; --r-lg: 16px; --r-xl: 24px;
+  --shadow-xs: 0 1px 1px rgba(11,11,11,.04);
+  --shadow-sm: 0 1px 0 0 rgba(11,11,11,.04), 0 2px 6px rgba(11,11,11,.05);
+  --shadow-md: 0 1px 0 0 rgba(11,11,11,.04), 0 12px 24px -12px rgba(11,11,11,.10);
+  --shadow-lg: 0 1px 0 0 rgba(11,11,11,.04), 0 24px 48px -24px rgba(11,11,11,.14);
+  --shadow-focus: 0 0 0 3px rgba(216,90,48,.18);
+  --sans: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", "Roboto Mono", Menlo, Consolas, monospace;
+  --ease: cubic-bezier(.2,.7,.2,1);
+}
+
+/* ============================================================
+   Base & layout — mobile-first, full-viewport map
+   ============================================================ */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: var(--sans);
+  color: var(--fg);
+  background: var(--paper);
+  -webkit-tap-highlight-color: transparent;
+}
+#map { position: fixed; inset: 0; z-index: 0; background: var(--paper); }
+
+button { font: inherit; border: none; cursor: pointer; background: none; }
+input  { font: inherit; }
+
+/* ============================================================
+   Top search bar
+   ============================================================ */
+#searchWrap {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  left: 12px; right: 12px;
+  z-index: 1000;
+}
+#searchBox {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 0 14px;
+  height: 46px;
+  box-shadow: var(--shadow-md);
+  transition: border-color .2s var(--ease), box-shadow .2s var(--ease);
+}
+#searchBox:focus-within {
+  border-color: var(--action);
+  box-shadow: var(--shadow-focus);
+}
+#searchBox svg { flex: none; color: var(--fg-3); }
+#searchInput {
+  flex: 1; border: none; outline: none; background: none;
+  font-size: 16px; /* 16px stops iOS zoom-on-focus */
+  color: var(--fg);
+  min-width: 0;
+}
+#searchInput::placeholder { color: var(--fg-3); }
+#searchClear { flex: none; padding: 8px; color: var(--fg-3); display: none; }
+#searchClear:hover { color: var(--fg); }
+#searchResults {
+  margin-top: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  display: none;
+}
+#searchResults .result {
+  display: block; width: 100%; text-align: left;
+  padding: 13px 16px;
+  font-size: 14px;
+  color: var(--fg);
+  border-bottom: 1px solid var(--border);
+  transition: background .15s var(--ease);
+}
+#searchResults .result:last-child { border-bottom: none; }
+#searchResults .result:hover, #searchResults .result:active { background: var(--muted); }
+#searchResults .result small { display: block; color: var(--fg-3); margin-top: 2px; font-size: 12px; }
+#searchResults .none { padding: 13px 16px; color: var(--fg-3); font-size: 13.5px; }
+
+/* ============================================================
+   Floating buttons (locate + report FAB)
+   ============================================================ */
+#locateBtn {
+  position: fixed;
+  right: 16px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 96px);
+  z-index: 1000;
+  width: 46px; height: 46px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--fg-2);
+  transition: border-color .15s var(--ease), color .15s var(--ease);
+}
+#locateBtn:hover { border-color: var(--border-strong); color: var(--fg); }
+#reportFab {
+  position: fixed;
+  right: 16px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+  z-index: 1000;
+  height: 52px;
+  border-radius: var(--r-md);
+  padding: 0 20px 0 16px;
+  background: var(--action);
+  color: #fff;
+  font-size: 15px; font-weight: 600;
+  display: flex; align-items: center; gap: 8px;
+  box-shadow: var(--shadow-md);
+  transition: background .15s var(--ease), transform .15s var(--ease);
+}
+#reportFab:hover { background: var(--action-700); }
+#reportFab:active, #locateBtn:active { transform: scale(.97); }
+
+/* ============================================================
+   Report bottom sheet
+   ============================================================ */
+#sheetBackdrop {
+  position: fixed; inset: 0; z-index: 1500;
+  background: rgba(11,11,11,.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s var(--ease);
+}
+#sheetBackdrop.open { opacity: 1; pointer-events: auto; }
+#reportSheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 1600;
+  background: var(--surface);
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  box-shadow: var(--shadow-lg);
+  padding: 8px 20px calc(env(safe-area-inset-bottom, 0px) + 20px);
+  transform: translateY(105%);
+  transition: transform .25s var(--ease);
+  max-height: 88vh;
+  overflow-y: auto;
+}
+#reportSheet.open { transform: translateY(0); }
+.sheetHandle {
+  width: 40px; height: 4px; border-radius: 2px;
+  background: var(--border-strong); margin: 6px auto 16px;
+}
+.eyebrow {
+  font-family: var(--mono); font-size: 11px; font-weight: 500;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--fg-3);
+}
+#reportSheet h2 {
+  font-size: 26px; line-height: .95; letter-spacing: -.04em; font-weight: 800;
+  margin: 6px 0 6px;
+}
+#reportSheet .sub { color: var(--fg-2); font-size: 13.5px; margin-bottom: 18px; }
+
+#cameraWrap {
+  position: relative;
+  border-radius: var(--r-lg); overflow: hidden;
+  background: var(--ink);
+  aspect-ratio: 4 / 3;
+  margin-bottom: 16px;
+  display: none;
+}
+#cameraWrap.on { display: block; }
+#cameraVideo { width: 100%; height: 100%; object-fit: cover; }
+#scanHint {
+  position: absolute; left: 0; right: 0; bottom: 10px;
+  text-align: center; color: #fff;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+  text-shadow: 0 1px 3px rgba(11,11,11,.8);
+}
+#scanBox {
+  position: absolute; top: 50%; left: 50%;
+  width: 55%; aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border: 2px solid rgba(255,255,255,.85);
+  border-radius: var(--r-lg);
+}
+
+.field label {
+  display: block;
+  font-family: var(--mono); font-size: 11px; font-weight: 500;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--fg-3);
+  margin-bottom: 8px;
+}
+#codeInput {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--r-md);
+  font-size: 20px;
+  font-family: var(--mono);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--fg);
+  outline: none;
+  transition: border-color .2s var(--ease), box-shadow .2s var(--ease);
+}
+#codeInput::placeholder { color: var(--fg-3); letter-spacing: 2px; }
+#codeInput:focus { border-color: var(--action); box-shadow: var(--shadow-focus); }
+#codeInput.bad { border-color: var(--danger); }
+#codeInput.bad:focus { box-shadow: 0 0 0 3px rgba(220,38,38,.14); }
+#codeError { color: var(--danger-strong); font-size: 12.5px; margin-top: 6px; min-height: 16px; }
+
+#gpsStatus {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 12px; letter-spacing: .02em;
+  color: var(--fg-2);
+  margin: 14px 0 18px;
+}
+#gpsDot { width: 8px; height: 8px; border-radius: 50%; background: var(--border-strong); flex: none; }
+#gpsDot.ok { background: var(--status); box-shadow: 0 0 0 3px rgba(46,107,230,.16); }
+#gpsDot.bad { background: var(--danger); }
+
+#submitBtn {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--r-md);
+  background: var(--ink); color: #fff;
+  font-size: 16px; font-weight: 600;
+  transition: background .15s var(--ease), transform .15s var(--ease);
+}
+#submitBtn:hover:not(:disabled) { background: var(--ink-700); }
+#submitBtn:disabled { background: var(--ink-300); cursor: default; }
+#submitBtn:active:not(:disabled) { transform: scale(.99); }
+
+/* ============================================================
+   Banners & toasts
+   ============================================================ */
+#banner {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 68px);
+  left: 12px; right: 12px;
+  z-index: 900;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--fg-2);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
+  padding: 11px 14px;
+  font-size: 13px;
+  display: none;
+  align-items: center; gap: 10px;
+}
+#banner.show { display: flex; }
+#banner button { color: var(--action); font-weight: 600; flex: none; padding: 4px; }
+#banner button:hover { color: var(--action-700); }
+
+#toasts {
+  position: fixed;
+  left: 0; right: 0;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 92px);
+  z-index: 2000;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  background: var(--ink);
+  color: #fff;
+  padding: 11px 18px;
+  border-radius: var(--r-md);
+  font-size: 13.5px;
+  max-width: 86vw;
+  text-align: center;
+  box-shadow: var(--shadow-md);
+  animation: toastIn .22s var(--ease);
+}
+@keyframes toastIn { from { opacity: 0; transform: translateY(8px); } }
+
+/* ============================================================
+   Map markers & popups
+   ============================================================ */
+.codePin {
+  background: var(--ink);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 11px; font-weight: 500; letter-spacing: .08em;
+  padding: 4px 8px;
+  border-radius: var(--r-xs);
+  border: 1px solid rgba(255,255,255,.9);
+  box-shadow: var(--shadow-sm);
+  white-space: nowrap;
+  position: relative;
+  width: max-content;
+  transform: translate(-50%, -100%);
+}
+.codePin::after {
+  content: "";
+  position: absolute;
+  left: 50%; bottom: -5px;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--ink);
+  border-bottom: none;
+}
+.leaflet-popup-content-wrapper { border-radius: var(--r-lg); box-shadow: var(--shadow-lg); }
+.leaflet-popup-content { margin: 14px 16px; font-family: var(--sans); }
+.popupCode {
+  font-family: var(--mono);
+  font-size: 20px; font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--fg);
+}
+.popupMeta {
+  font-family: var(--mono); font-size: 10.5px; font-weight: 500;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--fg-3);
+  margin: 6px 0 12px;
+  font-variant-numeric: tabular-nums;
+}
+.popupLinks { display: flex; gap: 8px; }
+.popupLinks a {
+  flex: 1;
+  text-align: center;
+  padding: 9px 12px;
+  border-radius: var(--r-md);
+  background: var(--action-soft);
+  border: 1px solid var(--action-300);
+  color: var(--action-700);
+  font-size: 13px; font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background .15s var(--ease);
+}
+.popupLinks a:hover { background: #FBE9E1; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div id="searchWrap">
+  <div id="searchBox">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="searchInput" type="search" placeholder="Search a place in Singapore" autocomplete="off" enterkeyhint="search">
+    <button id="searchClear" aria-label="Clear search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <div id="searchResults"></div>
+</div>
+
+<div id="banner"><span id="bannerText"></span><button id="bannerAction"></button></div>
+
+<button id="locateBtn" aria-label="Center on my location">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3.5M12 18.5V22M2 12h3.5M18.5 12H22"/></svg>
+</button>
+
+<button id="reportFab">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+  Report a code
+</button>
+
+<div id="sheetBackdrop"></div>
+<div id="reportSheet" role="dialog" aria-label="Report a QR code">
+  <div class="sheetHandle"></div>
+  <div class="eyebrow">New report</div>
+  <h2>Report a QR code</h2>
+  <p class="sub">Stand next to the parking QR sticker, then scan or type its code.</p>
+
+  <div id="cameraWrap">
+    <video id="cameraVideo" playsinline muted></video>
+    <div id="scanBox"></div>
+    <div id="scanHint">Point the camera at the QR sticker</div>
+  </div>
+
+  <div class="field">
+    <label for="codeInput">Code on the sticker</label>
+    <input id="codeInput" placeholder="ABC-1234" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="8">
+    <div id="codeError"></div>
+  </div>
+
+  <div id="gpsStatus"><span id="gpsDot"></span><span id="gpsText">Waiting for GPS…</span></div>
+
+  <button id="submitBtn" disabled>Submit report</button>
+</div>
+
+<div id="toasts"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/aero-db.js"></script>
+<script>
+'use strict';
+/* ============================================================
+   Section 1 — Config & constants
+   ============================================================ */
+const CODE_RE = /^[A-Z]{3}-[0-9A-Z]{4}$/;
+// Loose variant used to pull a code out of scanned QR payloads (which may
+// be a URL containing the code) and to auto-insert the dash while typing.
+const CODE_ANYWHERE_RE = /[A-Z]{3}-?[0-9A-Z]{4}/;
+const SG_CENTER = [1.3521, 103.8198];
+const SG_BBOX = { minLat: 1.15, maxLat: 1.48, minLng: 103.6, maxLng: 104.1 };
+const MAX_ACCURACY_M = 100;      // reject fixes worse than this at submit
+const MIN_RADIUS_M = 250;        // near-query radius clamp (viewport-derived)
+const MAX_RADIUS_M = 50000;      // server cap
+const NEAR_LIMIT = 50;
+const POLL_MS = 10000;
+const MOVE_DEBOUNCE_MS = 500;
+const SEARCH_DEBOUNCE_MS = 600;
+// Nominatim asks for an identifying contact on heavy use. Set before launch
+// or leave blank for light usage. See refs/PLAN.md.
+const NOMINATIM_EMAIL = '';
+
+/* ============================================================
+   Section 2 — aeroDB access layer (real when hosted, mock otherwise)
+   ============================================================ */
+// The in-memory mock mirrors the aero-db.js Table surface (add/get/set/
+// patch/list incl. `near` with _distanceMeters and nearest-first ordering)
+// so the whole app can be exercised locally before the page is published.
+function makeMockDb() {
+  const store = {}; // table -> Map(id -> row)
+  let autoId = 1;
+  const seed = [
+    { code: 'ABC-1234', lat: 1.28409, lng: 103.85148, numReports: 4, lastReportAt: Date.now() - 3600e3 },
+    { code: 'DEF-9B2K', lat: 1.28311, lng: 103.85302, numReports: 2, lastReportAt: Date.now() - 86400e3 },
+    { code: 'GHI-77XQ', lat: 1.28672, lng: 103.85455, numReports: 9, lastReportAt: Date.now() - 7200e3 },
+    { code: 'JKL-3C41', lat: 1.28150, lng: 103.86020, numReports: 1, lastReportAt: Date.now() - 5 * 86400e3 },
+  ];
+  function tbl(name) {
+    if (!store[name]) store[name] = new Map();
+    return store[name];
+  }
+  seed.forEach(s => tbl('qr_locations').set(s.code, {
+    id: s.code, data: s, createTime: '', updateTime: '',
+  }));
+  return {
+    mock: true,
+    table(name) {
+      const t = tbl(name);
+      return {
+        async add(data) {
+          const id = 'mock-' + autoId++;
+          const row = { id, data: { ...data, _owner: 'mock' }, createTime: '', updateTime: '' };
+          t.set(id, row);
+          return row;
+        },
+        async get(id) { return t.get(id) || null; },
+        async set(id, data) {
+          const row = { id, data: { ...data }, createTime: '', updateTime: '' };
+          t.set(id, row);
+          return row;
+        },
+        async patch(id, data) {
+          const row = t.get(id);
+          if (!row) { const e = new Error('not_found'); e.status = 404; throw e; }
+          Object.assign(row.data, data);
+          return row;
+        },
+        async delete(id) { t.delete(id); return { ok: true }; },
+        async list(opts = {}) {
+          let rows = [...t.values()];
+          if (opts.eq) {
+            rows = rows.filter(r => Object.entries(opts.eq).every(([k, v]) => r.data[k] === v));
+          }
+          if (opts.near) {
+            const { lat, lng, radiusMeters } = opts.near;
+            rows = rows
+              .map(r => ({ ...r, _distanceMeters: haversineM(lat, lng, r.data.lat, r.data.lng) }))
+              .filter(r => r._distanceMeters <= radiusMeters)
+              .sort((a, b) => a._distanceMeters - b._distanceMeters);
+          }
+          const off = opts.offset || 0;
+          return rows.slice(off, off + (opts.limit || 50));
+        },
+      };
+    },
+    async whoami() { return { kind: 'guest', id: 'mock' }; },
+  };
+}
+
+let db, localMode = false;
+try {
+  db = AeroDB.current(); // throws off /p/... URLs; ReferenceError when /aero-db.js didn't load
+} catch (_) {
+  db = makeMockDb();
+  localMode = true;
+}
+
+// --- login gate (soft): search & report require a signed-in aero user.
+// This is UI-level gating only — the data-layer tables stay own/any since
+// aeroDB has no "authenticated users only" access tier.
+let whoKind = null; // 'user' | 'guest' | null = not yet resolved
+async function ensureWho() {
+  if (whoKind === null) {
+    try { whoKind = (await db.whoami()).kind; } catch (_) { whoKind = 'guest'; }
+  }
+  return whoKind;
+}
+async function requireLogin() {
+  if (localMode) return true; // preview mode: nothing to sign in to
+  if (await ensureWho() === 'user') return true;
+  toast('Sign in with your aero account to continue…');
+  setTimeout(() => {
+    location.href = '/login?next=' + encodeURIComponent(location.pathname);
+  }, 800);
+  return false;
+}
+const scansTable = () => db.table('qr_scans');
+const locationsTable = () => db.table('qr_locations');
+
+/* ============================================================
+   Section 3 — Math & validation utils
+   ============================================================ */
+function haversineM(lat1, lng1, lat2, lng2) {
+  const R = 6371000, rad = Math.PI / 180;
+  const dLat = (lat2 - lat1) * rad, dLng = (lng2 - lng1) * rad;
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+function median(nums) {
+  const s = [...nums].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+}
+function normalizeCode(raw) {
+  let v = (raw || '').trim().toUpperCase();
+  // Accept a missing dash ("ABC1234") and codes embedded in URLs/QR payloads.
+  const m = v.match(CODE_ANYWHERE_RE);
+  if (!m) return null;
+  v = m[0].includes('-') ? m[0] : m[0].slice(0, 3) + '-' + m[0].slice(3);
+  return CODE_RE.test(v) ? v : null;
+}
+function inSingapore(lat, lng) {
+  return lat >= SG_BBOX.minLat && lat <= SG_BBOX.maxLat &&
+         lng >= SG_BBOX.minLng && lng <= SG_BBOX.maxLng;
+}
+function timeAgo(ts) {
+  const s = Math.max(0, (Date.now() - ts) / 1000);
+  if (s < 90) return 'just now';
+  if (s < 3600) return Math.round(s / 60) + ' min ago';
+  if (s < 172800) return Math.round(s / 3600) + ' h ago';
+  return Math.round(s / 86400) + ' days ago';
+}
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
+
+/* ============================================================
+   Section 4 — Data layer
+   ============================================================ */
+async function fetchNearby(lat, lng, radiusMeters) {
+  return locationsTable().list({
+    near: { lat, lng, radiusMeters: Math.min(Math.max(radiusMeters, MIN_RADIUS_M), MAX_RADIUS_M) },
+    limit: NEAR_LIMIT,
+  });
+}
+
+// Recompute the component-wise median over every raw scan of this code and
+// upsert the shared per-code row (row id = the code itself; PUT-on-missing
+// creates it for anyone because qr_locations is write:'any').
+async function recomputeAndUpsertLocation(code) {
+  const rows = [];
+  let offset = 0;
+  for (;;) {
+    const page = await scansTable().list({ eq: { code }, limit: 200, offset });
+    rows.push(...page);
+    offset += 200;
+    if (page.length < 200 || offset > 10000) break;
+  }
+  const loc = {
+    code,
+    lat: median(rows.map(r => r.data.lat)),
+    lng: median(rows.map(r => r.data.lng)),
+    numReports: rows.length,
+    lastReportAt: Date.now(),
+  };
+  await locationsTable().set(code, loc);
+  return loc;
+}
+
+async function submitScan(code, pos, source) {
+  await scansTable().add({
+    code,
+    lat: pos.lat,
+    lng: pos.lng,
+    accuracy: pos.accuracy,
+    source,
+    clientTimestamp: Date.now(),
+  });
+  return recomputeAndUpsertLocation(code);
+}
+
+/* ============================================================
+   Section 5 — Map layer
+   ============================================================ */
+const map = L.map('map', { zoomControl: false, attributionControl: true })
+  .setView(SG_CENTER, 16);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+}).addTo(map);
+
+const markers = new Map(); // code -> L.Marker
+let userMarker = null, userAccCircle = null;
+let partialNoticeShown = false;
+
+function popupHtml(code, data, distanceMeters) {
+  const dist = distanceMeters != null && isFinite(distanceMeters)
+    ? Math.round(distanceMeters) + ' m away · ' : '';
+  return `
+    <div class="popupCode">${esc(code)}</div>
+    <div class="popupMeta">${dist}${data.numReports} report${data.numReports === 1 ? '' : 's'} · ${timeAgo(data.lastReportAt)}</div>
+    <div class="popupLinks">
+      <a href="https://www.google.com/maps/search/?api=1&query=${data.lat},${data.lng}" target="_blank" rel="noopener">Google Maps</a>
+      <a href="https://maps.apple.com/?daddr=${data.lat},${data.lng}" target="_blank" rel="noopener">Apple Maps</a>
+    </div>`;
+}
+
+function upsertMarker(code, data, distanceMeters) {
+  const existing = markers.get(code);
+  if (existing) {
+    existing.setLatLng([data.lat, data.lng]);
+    existing.setPopupContent(popupHtml(code, data, distanceMeters));
+    return;
+  }
+  const icon = L.divIcon({ className: '', html: `<div class="codePin">${esc(code)}</div>`, iconSize: [0, 0] });
+  const m = L.marker([data.lat, data.lng], { icon }).addTo(map);
+  m.bindPopup(popupHtml(code, data, distanceMeters));
+  markers.set(code, m);
+}
+
+function renderRows(rows) {
+  const seen = new Set();
+  for (const r of rows) {
+    upsertMarker(r.data.code, r.data, r._distanceMeters);
+    seen.add(r.data.code);
+  }
+  // Drop markers that fell out of the current query's radius/limit.
+  for (const [code, m] of markers) {
+    if (!seen.has(code)) { map.removeLayer(m); markers.delete(code); }
+  }
+  if (rows.partial && !partialNoticeShown) {
+    partialNoticeShown = true; // once per session is enough
+    toast('Busy area — some codes may be missing. Zoom in for full results.');
+  }
+}
+
+function viewportRadiusM() {
+  const b = map.getBounds(), c = map.getCenter(), ne = b.getNorthEast();
+  return haversineM(c.lat, c.lng, ne.lat, ne.lng);
+}
+
+let refreshTimer = null, refreshing = false;
+async function refreshNearby() {
+  if (refreshing) return;
+  refreshing = true;
+  try {
+    const c = map.getCenter();
+    renderRows(await fetchNearby(c.lat, c.lng, viewportRadiusM()));
+  } catch (e) {
+    if (e.status === 400 && e.body && e.body.error === 'geo_not_enabled') {
+      showBanner('Database not set up yet (geo flag missing on qr_locations).', '', null);
+    } else {
+      console.warn('refreshNearby failed:', e);
+    }
+  } finally {
+    refreshing = false;
+  }
+}
+map.on('moveend', () => {
+  clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(refreshNearby, MOVE_DEBOUNCE_MS);
+});
+setInterval(() => { if (document.visibilityState === 'visible') refreshNearby(); }, POLL_MS);
+
+function showUserDot(lat, lng, accuracy) {
+  if (!userMarker) {
+    userMarker = L.circleMarker([lat, lng], {
+      radius: 7, color: '#fff', weight: 2.5, fillColor: '#2E6BE6', fillOpacity: 1,
+    }).addTo(map);
+    userAccCircle = L.circle([lat, lng], {
+      radius: accuracy, color: '#2E6BE6', weight: 1, opacity: .3, fillOpacity: .08,
+    }).addTo(map);
+  } else {
+    userMarker.setLatLng([lat, lng]);
+    userAccCircle.setLatLng([lat, lng]).setRadius(accuracy);
+  }
+}
+
+/* ============================================================
+   Section 6 — Place search (OSM Nominatim, debounced + cached)
+   ============================================================ */
+const searchInput = document.getElementById('searchInput');
+const searchResults = document.getElementById('searchResults');
+const searchClear = document.getElementById('searchClear');
+const searchCache = new Map();
+let searchTimer = null, searchBusy = false;
+
+async function doSearch(q) {
+  const key = q.toLowerCase();
+  if (searchCache.has(key)) return renderSearch(searchCache.get(key));
+  if (searchBusy) return; // ≤1 in-flight request (Nominatim policy)
+  searchBusy = true;
+  try {
+    const url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=sg'
+      + '&q=' + encodeURIComponent(q)
+      + (NOMINATIM_EMAIL ? '&email=' + encodeURIComponent(NOMINATIM_EMAIL) : '');
+    const res = await fetch(url, { headers: { Accept: 'application/json' } });
+    if (!res.ok) throw new Error('nominatim ' + res.status);
+    const results = await res.json();
+    searchCache.set(key, results);
+    if (searchInput.value.trim().toLowerCase() === key) renderSearch(results);
+  } catch (e) {
+    console.warn('search failed:', e);
+    searchResults.innerHTML = '<div class="none">Search unavailable — try again.</div>';
+    searchResults.style.display = 'block';
+  } finally {
+    searchBusy = false;
+  }
+}
+
+function renderSearch(results) {
+  if (!results.length) {
+    searchResults.innerHTML = '<div class="none">No places found.</div>';
+  } else {
+    searchResults.innerHTML = results.map((r, i) => {
+      const [name, ...rest] = r.display_name.split(', ');
+      return `<button class="result" data-i="${i}">${esc(name)}<small>${esc(rest.slice(0, 3).join(', '))}</small></button>`;
+    }).join('');
+    searchResults.querySelectorAll('.result').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const r = results[+btn.dataset.i];
+        map.setView([+r.lat, +r.lon], 17);
+        closeSearch();
+      });
+    });
+  }
+  searchResults.style.display = 'block';
+}
+
+function closeSearch() {
+  searchResults.style.display = 'none';
+  searchInput.blur();
+}
+searchInput.addEventListener('focus', async () => {
+  if (localMode) return;
+  if (await ensureWho() !== 'user') {
+    searchInput.blur();
+    requireLogin();
+  }
+});
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.trim();
+  searchClear.style.display = q ? 'block' : 'none';
+  clearTimeout(searchTimer);
+  if (q.length < 3) { searchResults.style.display = 'none'; return; }
+  searchTimer = setTimeout(() => doSearch(q), SEARCH_DEBOUNCE_MS);
+});
+searchClear.addEventListener('click', () => {
+  searchInput.value = '';
+  searchClear.style.display = 'none';
+  closeSearch();
+});
+map.on('mousedown touchstart', closeSearch);
+
+/* ============================================================
+   Section 7 — Report flow (camera scan + always-available manual entry)
+   ============================================================ */
+const sheet = document.getElementById('reportSheet');
+const backdrop = document.getElementById('sheetBackdrop');
+const cameraWrap = document.getElementById('cameraWrap');
+const video = document.getElementById('cameraVideo');
+const codeInput = document.getElementById('codeInput');
+const codeError = document.getElementById('codeError');
+const submitBtn = document.getElementById('submitBtn');
+const gpsDot = document.getElementById('gpsDot');
+const gpsText = document.getElementById('gpsText');
+
+let cameraStream = null, scanTimer = null, gpsWatchId = null, lastFix = null;
+let codeSource = 'manual'; // flipped to 'scan' when the detector fills the field
+
+async function startCamera() {
+  if (!('BarcodeDetector' in window)) return;
+  let formats;
+  try { formats = await BarcodeDetector.getSupportedFormats(); } catch (_) { return; }
+  if (!formats.includes('qr_code')) return;
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment' }, audio: false,
+    });
+  } catch (_) {
+    toast('Camera not available — enter the code manually.');
+    return;
+  }
+  video.srcObject = cameraStream;
+  await video.play().catch(() => {});
+  cameraWrap.classList.add('on');
+  const detector = new BarcodeDetector({ formats: ['qr_code'] });
+  scanTimer = setInterval(async () => {
+    if (video.readyState < 2) return;
+    try {
+      const found = await detector.detect(video);
+      for (const b of found) {
+        const code = normalizeCode(b.rawValue);
+        if (code) {
+          codeInput.value = code; // populate, don't submit — user confirms
+          codeSource = 'scan';
+          validateCodeField();
+          stopCamera();
+          toast('Code detected — check it and submit.');
+          return;
+        }
+      }
+    } catch (_) { /* transient detect failures are fine */ }
+  }, 400);
+}
+
+function stopCamera() {
+  clearInterval(scanTimer); scanTimer = null;
+  if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+  video.srcObject = null;
+  cameraWrap.classList.remove('on');
+}
+
+function startGpsWatch() {
+  if (!navigator.geolocation) { gpsText.textContent = 'No GPS on this device.'; return; }
+  gpsWatchId = navigator.geolocation.watchPosition(p => {
+    lastFix = { lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy };
+    const acc = Math.round(lastFix.accuracy);
+    if (!inSingapore(lastFix.lat, lastFix.lng)) {
+      gpsDot.className = 'bad';
+      gpsText.textContent = 'Location is outside Singapore.';
+    } else if (lastFix.accuracy > MAX_ACCURACY_M) {
+      gpsDot.className = 'bad';
+      gpsText.textContent = `GPS ±${acc} m — too imprecise, move to an open area.`;
+    } else {
+      gpsDot.className = 'ok';
+      gpsText.textContent = `GPS locked · ±${acc} m`;
+    }
+    validateCodeField();
+  }, () => {
+    gpsDot.className = 'bad';
+    gpsText.textContent = 'Location permission denied — enable it to report.';
+  }, { enableHighAccuracy: true, maximumAge: 5000 });
+}
+
+function stopGpsWatch() {
+  if (gpsWatchId != null) { navigator.geolocation.clearWatch(gpsWatchId); gpsWatchId = null; }
+}
+
+function fixIsSubmittable() {
+  return lastFix && lastFix.accuracy <= MAX_ACCURACY_M && inSingapore(lastFix.lat, lastFix.lng);
+}
+
+function validateCodeField() {
+  const raw = codeInput.value.trim();
+  const code = normalizeCode(raw);
+  if (raw && !code) {
+    codeInput.classList.add('bad');
+    codeError.textContent = 'Format: 3 letters + 4 characters — e.g. ABC-1234';
+  } else {
+    codeInput.classList.remove('bad');
+    codeError.textContent = '';
+  }
+  submitBtn.disabled = !(code && fixIsSubmittable());
+  return code;
+}
+codeInput.addEventListener('input', () => {
+  // Input mask: uppercase and auto-insert the dash — the user never types it.
+  const clean = codeInput.value.toUpperCase().replace(/[^0-9A-Z]/g, '').slice(0, 7);
+  codeInput.value = clean.length > 3 ? clean.slice(0, 3) + '-' + clean.slice(3) : clean;
+  codeSource = 'manual';
+  validateCodeField();
+});
+
+function openSheet() {
+  sheet.classList.add('open');
+  backdrop.classList.add('open');
+  lastFix = null;
+  codeSource = 'manual';
+  gpsDot.className = '';
+  gpsText.textContent = 'Waiting for GPS…';
+  startGpsWatch();
+  startCamera();
+}
+
+function closeSheet() {
+  sheet.classList.remove('open');
+  backdrop.classList.remove('open');
+  stopCamera();
+  stopGpsWatch();
+}
+
+document.getElementById('reportFab').addEventListener('click', async () => {
+  if (await requireLogin()) openSheet();
+});
+backdrop.addEventListener('click', closeSheet);
+
+submitBtn.addEventListener('click', async () => {
+  const code = validateCodeField();
+  if (!code || !fixIsSubmittable()) return;
+  const source = codeSource;
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Submitting…';
+  try {
+    const loc = await submitScan(code, lastFix, source);
+    upsertMarker(code, loc, haversineM(lastFix.lat, lastFix.lng, loc.lat, loc.lng));
+    closeSheet();
+    codeInput.value = '';
+    toast(localMode
+      ? 'Saved locally (preview mode — not persisted).'
+      : 'Thanks — code reported!');
+    map.setView([loc.lat, loc.lng], Math.max(map.getZoom(), 17));
+  } catch (e) {
+    if (e.status === 401 || e.status === 403) {
+      toast('Reporting is not open yet — tables need to be configured.');
+    } else {
+      toast('Submit failed: ' + (e.message || 'unknown error'));
+    }
+  } finally {
+    submitBtn.textContent = 'Submit report';
+    validateCodeField();
+  }
+});
+
+/* ============================================================
+   Section 8 — Banners, toasts & app init
+   ============================================================ */
+const banner = document.getElementById('banner');
+const bannerText = document.getElementById('bannerText');
+const bannerAction = document.getElementById('bannerAction');
+let bannerCb = null;
+
+function showBanner(text, actionLabel, cb) {
+  bannerText.textContent = text;
+  bannerAction.textContent = actionLabel || '';
+  bannerAction.style.display = actionLabel ? 'block' : 'none';
+  bannerCb = cb;
+  banner.classList.add('show');
+}
+function hideBanner() { banner.classList.remove('show'); bannerCb = null; }
+bannerAction.addEventListener('click', () => { if (bannerCb) bannerCb(); });
+
+function toast(msg, ms = 3200) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), ms);
+}
+
+function locateAndCenter(showErrors) {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(p => {
+    hideBanner();
+    const { latitude: lat, longitude: lng, accuracy } = p.coords;
+    showUserDot(lat, lng, accuracy);
+    map.setView([lat, lng], 17);
+  }, () => {
+    if (showErrors) {
+      showBanner('Enable location to see codes near you.', 'Retry', () => locateAndCenter(true));
+    }
+  }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 });
+}
+
+document.getElementById('locateBtn').addEventListener('click', () => locateAndCenter(true));
+
+// --- init ---
+if (localMode) {
+  showBanner('Local preview mode — data won’t be saved. Publish on aero to go live.', '', null);
+} else {
+  ensureWho(); // resolve the visitor's kind early so the first gated tap is instant
+}
+locateAndCenter(true);
+refreshNearby();
+</script>
+</body>
+</html>
