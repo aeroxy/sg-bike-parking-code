@@ -337,7 +337,7 @@ input  { font: inherit; }
   font-variant-numeric: tabular-nums;
 }
 .popupLinks { display: flex; gap: 8px; }
-.popupLinks a {
+.popupLinks a, .popupLinks .copyBtn {
   flex: 1;
   text-align: center;
   padding: 9px 12px;
@@ -349,8 +349,10 @@ input  { font: inherit; }
   text-decoration: none;
   white-space: nowrap;
   transition: background .15s var(--ease);
+  font-family: inherit;
+  cursor: pointer;
 }
-.popupLinks a:hover { background: #FBE9E1; }
+.popupLinks a:hover, .popupLinks .copyBtn:hover { background: #FBE9E1; }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
@@ -618,12 +620,29 @@ async function submitScan(code, pos, source) {
 /* ============================================================
    Section 5 — Map layer
    ============================================================ */
+const LAST_VIEW_KEY = 'bikeqr.lastView';
+function loadLastView() {
+  try {
+    const v = JSON.parse(localStorage.getItem(LAST_VIEW_KEY));
+    if (v && isFinite(v.lat) && isFinite(v.lng) && isFinite(v.zoom)) return v;
+  } catch (e) {}
+  return null;
+}
+function saveLastView() {
+  const c = map.getCenter();
+  try {
+    localStorage.setItem(LAST_VIEW_KEY, JSON.stringify({ lat: c.lat, lng: c.lng, zoom: map.getZoom() }));
+  } catch (e) {}
+}
+
+const lastView = loadLastView();
 const map = L.map('map', { zoomControl: false, attributionControl: true })
-  .setView(SG_CENTER, 16);
+  .setView(lastView ? [lastView.lat, lastView.lng] : SG_CENTER, lastView ? lastView.zoom : 16);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
 }).addTo(map);
+map.on('moveend', saveLastView);
 
 const markers = new Map(); // code -> L.Marker
 let userMarker = null, userAccCircle = null;
@@ -636,9 +655,17 @@ function popupHtml(code, data, distanceMeters) {
     <div class="popupCode">${esc(code)}</div>
     <div class="popupMeta">${dist}${data.numReports} report${data.numReports === 1 ? '' : 's'} · ${timeAgo(data.lastReportAt)}</div>
     <div class="popupLinks">
-      <a href="https://www.google.com/maps/search/?api=1&query=${data.lat},${data.lng}" target="_blank" rel="noopener">Google Maps</a>
-      <a href="https://maps.apple.com/?daddr=${data.lat},${data.lng}" target="_blank" rel="noopener">Apple Maps</a>
+      <button type="button" class="copyBtn" onclick='copyCode(${JSON.stringify(code)}, this)'>Copy code</button>
     </div>`;
+}
+
+function copyCode(code, btn) {
+  navigator.clipboard.writeText(code).then(() => {
+    if (!btn) return;
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = orig; }, 1500);
+  }).catch(() => toast('Copy failed'));
 }
 
 function upsertMarker(code, data, distanceMeters) {
