@@ -97,17 +97,43 @@ device with a camera and `BarcodeDetector` — Chrome on Android).
 
 ## Publishing
 
-The page is published to Aero over its MCP server, so it can be created and
-updated from a coding agent without copy-pasting HTML:
-
 ```
-claude mcp add --transport http aero https://aero.oops.wtf/mcp \
-  --header "Authorization: Bearer <your-aero-token>"
+cp .env.example .env      # then paste a token from https://aero.oops.wtf/connect
+./deploy.sh --check       # verify size and digest, publish nothing
+./deploy.sh               # publish
 ```
 
-Mint the token at <https://aero.oops.wtf/connect>. Table access, however, is
-**not** exposed over MCP today — after the first publish, configure both tables
-once from the Aero web UI (Apps → the page → Database), or from the browser
+[`deploy.sh`](deploy.sh) talks to Aero's MCP server, but the document itself
+never travels as an MCP argument. It mints a one-shot upload token with
+`create_page_upload` and then `PUT`s the bytes over HTTP.
+
+That split matters because `index.html` is ~42 KB. MCP arguments are JSON an
+agent authors, so publishing inline means re-emitting the whole document token
+by token, with no integrity check at the end — a character lost along the way
+publishes live and reports success. `create_page_upload` commits the file's
+sha256 **before any bytes move**, so a corrupted body is rejected with 422 and
+nothing is published. Uploads otherwise behave exactly like `update_page`:
+same validation, same side effects, same entry in the page's version history.
+
+Transfer tokens are **owner-only**. If you're a contributor rather than the
+page's owner, `deploy.sh` won't work for you — send a pull request instead.
+
+### Checking for drift
+
+`--check` also answers "is the deployed page still what's in git?" — it reports
+the live page's digest alongside the local one and never transfers the
+document:
+
+```json
+{"sha256":"eb60b46f…","current_sha256":"eb60b46f…","changed":false,"would_publish":true}
+```
+
+`changed: false` means the live page is already identical to your working tree.
+
+### Table access
+
+Table access is **not** exposed over MCP today — after the first publish,
+configure both tables once from the Aero web UI (Apps → the page → Database), or from the browser
 console while signed in:
 
 ```js
