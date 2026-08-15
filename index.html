@@ -197,6 +197,22 @@ input  { font: inherit; }
   font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
   text-shadow: 0 1px 3px rgba(11,11,11,.8);
 }
+#lensBar {
+  position: absolute; left: 0; right: 0; bottom: 34px;
+  display: none; justify-content: center; gap: 8px;
+}
+#lensBar.on { display: flex; }
+#lensBar button {
+  min-width: 44px; height: 30px; padding: 0 11px;
+  border-radius: 999px;
+  background: rgba(11,11,11,.5);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,.28);
+  color: #fff;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .06em;
+  transition: background .15s var(--ease), border-color .15s var(--ease);
+}
+#lensBar button.sel { background: var(--action); border-color: var(--action); }
 #scanBox {
   position: absolute; top: 50%; left: 50%;
   width: 55%; aspect-ratio: 1;
@@ -395,6 +411,7 @@ input  { font: inherit; }
   <div id="cameraWrap">
     <video id="cameraVideo" playsinline muted></video>
     <div id="scanBox"></div>
+    <div id="lensBar"></div>
     <div id="scanHint">Point the camera at the QR sticker</div>
   </div>
 
@@ -828,25 +845,100 @@ const submitBtn = document.getElementById('submitBtn');
 const gpsDot = document.getElementById('gpsDot');
 const gpsText = document.getElementById('gpsText');
 
+const lensBar = document.getElementById('lensBar');
+const ZOOM_STEPS = [1, 2, 5]; // offered only where the track reports that range
+
 let cameraStream = null, scanTimer = null, gpsWatchId = null, lastFix = null;
 let codeSource = 'manual'; // flipped to 'scan' when the detector fills the field
+// Remembered for the session so re-opening the sheet keeps the lens you picked.
+// Either { zoom: 2 } (Android-style track zoom) or { deviceId } (iOS-style separate lenses).
+let lensChoice = null;
+
+async function openStream(videoConstraints) {
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: false });
+  } catch (_) {
+    if (videoConstraints.deviceId) { // remembered lens is gone — fall back to the default back camera
+      lensChoice = null;
+      return openStream({ facingMode: 'environment' });
+    }
+    toast('Camera not available — enter the code manually.');
+    return false;
+  }
+  video.srcObject = cameraStream;
+  await video.play().catch(() => {});
+  return true;
+}
+
+/* Zoom where the browser exposes it (Chrome on Android), otherwise one button per
+   back lens (Safari on iOS). Neither exists on desktop, where the bar stays hidden. */
+async function buildLensBar() {
+  lensBar.innerHTML = '';
+  lensBar.classList.remove('on');
+  const track = cameraStream.getVideoTracks()[0];
+  const caps = track.getCapabilities ? track.getCapabilities() : {};
+
+  const addBtn = (text, selected, onPick) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = text;
+    if (selected) b.className = 'sel';
+    b.addEventListener('click', onPick);
+    lensBar.appendChild(b);
+  };
+
+  if (caps.zoom && caps.zoom.max > caps.zoom.min) {
+    const steps = ZOOM_STEPS.filter(z => z >= caps.zoom.min && z <= caps.zoom.max);
+    if (steps.length < 2) return;
+    const wanted = steps.includes(lensChoice?.zoom) ? lensChoice.zoom : steps[0];
+    const applyZoom = async z => {
+      try { await track.applyConstraints({ advanced: [{ zoom: z }] }); } catch (_) { return; }
+      lensChoice = { zoom: z };
+      for (const b of lensBar.children) b.classList.toggle('sel', b.textContent === `${z}×`);
+    };
+    for (const z of steps) addBtn(`${z}×`, z === wanted, () => applyZoom(z));
+    await applyZoom(wanted);
+    lensBar.classList.add('on');
+    return;
+  }
+
+  let cams;
+  try { cams = await navigator.mediaDevices.enumerateDevices(); } catch (_) { return; }
+  const backs = cams.filter(d => d.kind === 'videoinput' && !/front|user|selfie/i.test(d.label));
+  if (backs.length < 2) return;
+  const currentId = track.getSettings ? track.getSettings().deviceId : null;
+  backs.forEach((d, i) => addBtn(lensLabel(d, i), d.deviceId === currentId, () => selectLens(d.deviceId)));
+  lensBar.classList.add('on');
+}
+
+// Labels are the OS's own strings, so name the lens rather than invent a zoom factor.
+function lensLabel(device, i) {
+  const l = device.label.toLowerCase();
+  if (l.includes('ultra')) return 'Ultra';
+  if (l.includes('telephoto') || l.includes('tele')) return 'Tele';
+  if (l.includes('dual') || l.includes('triple')) return 'Auto';
+  if (l.includes('wide')) return 'Main';
+  return `Lens ${i + 1}`;
+}
+
+async function selectLens(deviceId) {
+  if (!cameraStream) return; // scan already succeeded and tore the camera down
+  cameraStream.getTracks().forEach(t => t.stop()); // one camera at a time; the scan loop waits on readyState
+  lensChoice = { deviceId };
+  if (await openStream({ deviceId: { exact: deviceId } })) await buildLensBar();
+}
 
 async function startCamera() {
   if (!('BarcodeDetector' in window)) return;
   let formats;
   try { formats = await BarcodeDetector.getSupportedFormats(); } catch (_) { return; }
   if (!formats.includes('qr_code')) return;
-  try {
-    cameraStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment' }, audio: false,
-    });
-  } catch (_) {
-    toast('Camera not available — enter the code manually.');
-    return;
-  }
-  video.srcObject = cameraStream;
-  await video.play().catch(() => {});
+  const opened = await openStream(
+    lensChoice?.deviceId ? { deviceId: { exact: lensChoice.deviceId } } : { facingMode: 'environment' }
+  );
+  if (!opened) return;
   cameraWrap.classList.add('on');
+  await buildLensBar();
   const detector = new BarcodeDetector({ formats: ['qr_code'] });
   scanTimer = setInterval(async () => {
     if (video.readyState < 2) return;
