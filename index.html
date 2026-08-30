@@ -445,7 +445,7 @@ const MAX_ACCURACY_M = 100;      // reject fixes worse than this at submit
 const MIN_RADIUS_M = 250;        // near-query radius clamp (viewport-derived)
 const MAX_RADIUS_M = 50000;      // server cap
 const NEAR_LIMIT = 50;
-const POLL_MS = 10000;
+const COOLDOWN_MS = 10000;   // minimum gap between nearby-code fetches
 const MOVE_DEBOUNCE_MS = 500;
 const SEARCH_DEBOUNCE_MS = 600;
 // Nominatim asks for an identifying contact on heavy use. Set before launch
@@ -719,13 +719,31 @@ function viewportRadiusM() {
   return haversineM(c.lat, c.lng, ne.lat, ne.lng);
 }
 
-let refreshTimer = null, refreshing = false;
+// The view we last fetched for, so an idle map asks for nothing.
+function viewKey() {
+  const c = map.getCenter();
+  return `${c.lat.toFixed(5)},${c.lng.toFixed(5)},${map.getZoom()}`;
+}
+
+let refreshTimer = null, refreshing = false, lastFetchAt = 0, lastFetchedView = null;
+
+// Fetch at most once per COOLDOWN_MS, on the trailing edge of a move.
+function scheduleRefresh() {
+  clearTimeout(refreshTimer);
+  const wait = Math.max(MOVE_DEBOUNCE_MS, COOLDOWN_MS - (Date.now() - lastFetchAt));
+  refreshTimer = setTimeout(refreshNearby, wait);
+}
+
 async function refreshNearby() {
-  if (refreshing) return;
+  if (refreshing) { scheduleRefresh(); return; }   // retry once the in-flight one lands
+  const view = viewKey();
+  if (view === lastFetchedView) return;            // map hasn't moved — nothing new to ask for
   refreshing = true;
+  lastFetchAt = Date.now();
   try {
     const c = map.getCenter();
     renderRows(await fetchNearby(c.lat, c.lng, viewportRadiusM()));
+    lastFetchedView = view;                        // only on success, so failures retry
   } catch (e) {
     if (e.status === 400 && e.body && e.body.error === 'geo_not_enabled') {
       showBanner('Database not set up yet (geo flag missing on qr_locations).', '', null);
@@ -736,11 +754,7 @@ async function refreshNearby() {
     refreshing = false;
   }
 }
-map.on('moveend', () => {
-  clearTimeout(refreshTimer);
-  refreshTimer = setTimeout(refreshNearby, MOVE_DEBOUNCE_MS);
-});
-setInterval(() => { if (document.visibilityState === 'visible') refreshNearby(); }, POLL_MS);
+map.on('moveend', scheduleRefresh);
 
 function showUserDot(lat, lng, accuracy) {
   if (!userMarker) {
