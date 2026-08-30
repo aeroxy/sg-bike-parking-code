@@ -521,9 +521,8 @@ const MAX_ACCURACY_M = 100;      // reject fixes worse than this at submit
 const MIN_RADIUS_M = 250;        // near-query radius clamp (viewport-derived)
 const MAX_RADIUS_M = 50000;      // server cap
 const NEAR_LIMIT = 50;
-const COOLDOWN_MS = 10000;   // minimum gap between nearby-code fetches
 const INITIAL_FETCH_MS = 3000;  // deadline for geolocation to land before falling back to a viewport fetch
-const MOVE_DEBOUNCE_MS = 500;
+const MOVE_DEBOUNCE_MS = 2000;  // how long the map must sit still before we fetch for the new view
 const SEARCH_DEBOUNCE_MS = 600;
 // Nominatim asks for an identifying contact on heavy use. Set before launch
 // or leave blank for light usage. See refs/PLAN.md.
@@ -893,7 +892,7 @@ function viewKey() {
   return `${c.lat.toFixed(5)},${c.lng.toFixed(5)},${map.getZoom()}`;
 }
 
-let refreshTimer = null, refreshing = false, lastFetchAt = 0, lastFetchedView = null;
+let refreshTimer = null, refreshing = false, lastFetchedView = null;
 // Reads are pointless right now — stop until that changes. Checked at the top
 // of both scheduleRefresh and refreshNearby, so a timer already in flight when
 // we halt fires into a no-op and needs no cancelling.
@@ -933,12 +932,12 @@ function resumeAfterQuota() {
   refreshNow();
 }
 
-// Fetch at most once per COOLDOWN_MS, on the trailing edge of a move.
+// Fetch once the map has settled: every move restarts the timer, so a run of
+// pans costs one read at the end rather than one per pause.
 function scheduleRefresh() {
   if (dataHalted) return;
   clearTimeout(refreshTimer);
-  const wait = Math.max(MOVE_DEBOUNCE_MS, COOLDOWN_MS - (Date.now() - lastFetchAt));
-  refreshTimer = setTimeout(refreshNearby, wait);
+  refreshTimer = setTimeout(refreshNearby, MOVE_DEBOUNCE_MS);
 }
 
 async function refreshNearby() {
@@ -947,7 +946,6 @@ async function refreshNearby() {
   const view = viewKey();
   if (view === lastFetchedView) return;            // map hasn't moved — nothing new to ask for
   refreshing = true;
-  lastFetchAt = Date.now();
   try {
     const c = map.getCenter();
     renderRows(await fetchNearby(c.lat, c.lng, viewportRadiusM()));
@@ -967,13 +965,15 @@ async function refreshNearby() {
   }
 }
 // A deliberate recentre (geolocation, search result) shouldn't wait out the
-// cooldown — that gap is there to absorb panning, not to stall a jump.
+// settle delay — that gap is there to absorb panning, not to stall a jump.
 function refreshNow() {
   clearTimeout(refreshTimer);
-  lastFetchAt = 0;
   refreshNearby();
 }
 
+// A drag resuming after a pause cancels the pending fetch: the view it would
+// have asked about is already stale, and moveend will schedule the real one.
+map.on('movestart', () => clearTimeout(refreshTimer));
 map.on('moveend', scheduleRefresh);
 
 function showUserDot(lat, lng, accuracy) {
