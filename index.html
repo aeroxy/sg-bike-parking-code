@@ -155,7 +155,7 @@ input  { font: inherit; }
   transition: opacity .25s var(--ease);
 }
 #sheetBackdrop.open { opacity: 1; pointer-events: auto; }
-#reportSheet, #quotaSheet {
+#reportSheet, #quotaSheet, #loginSheet {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 1600;
   background: var(--surface);
   border-radius: var(--r-xl) var(--r-xl) 0 0;
@@ -166,7 +166,7 @@ input  { font: inherit; }
   max-height: 88vh;
   overflow-y: auto;
 }
-#reportSheet.open, #quotaSheet.open { transform: translateY(0); }
+#reportSheet.open, #quotaSheet.open, #loginSheet.open { transform: translateY(0); }
 .sheetHandle {
   width: 40px; height: 4px; border-radius: 2px;
   background: var(--border-strong); margin: 6px auto 16px;
@@ -175,14 +175,14 @@ input  { font: inherit; }
   font-family: var(--mono); font-size: 11px; font-weight: 500;
   letter-spacing: .14em; text-transform: uppercase; color: var(--fg-3);
 }
-#reportSheet h2, #quotaSheet h2 {
+#reportSheet h2, #quotaSheet h2, #loginSheet h2 {
   font-size: 26px; line-height: .95; letter-spacing: -.04em; font-weight: 800;
   margin: 6px 0 6px;
 }
-#reportSheet .sub, #quotaSheet .sub { color: var(--fg-2); font-size: 13.5px; margin-bottom: 18px; }
+#reportSheet .sub, #quotaSheet .sub, #loginSheet .sub { color: var(--fg-2); font-size: 13.5px; margin-bottom: 18px; }
 
 /* Support / quota sheet */
-#supportBtn {
+#supportBtn, #loginBtn {
   display: flex; align-items: center; justify-content: center; gap: 8px;
   width: 100%; padding: 14px; margin-bottom: 10px;
   border-radius: var(--r-md);
@@ -190,8 +190,8 @@ input  { font: inherit; }
   font-size: 16px; font-weight: 600; text-decoration: none;
   transition: background .15s var(--ease), transform .15s var(--ease);
 }
-#supportBtn:hover { background: var(--action-700); }
-#supportBtn:active { transform: scale(.99); }
+#supportBtn:hover, #loginBtn:hover { background: var(--action-700); }
+#supportBtn:active, #loginBtn:active { transform: scale(.99); }
 #quotaRetryBtn {
   width: 100%; padding: 13px;
   border-radius: var(--r-md);
@@ -199,7 +199,7 @@ input  { font: inherit; }
   font-size: 15px; font-weight: 600;
 }
 #quotaRetryBtn:hover { background: var(--border); }
-#quotaNote {
+#quotaNote, #loginNote {
   font-family: var(--mono); font-size: 11px; letter-spacing: .04em;
   color: var(--fg-3); text-align: center; margin-top: 14px;
 }
@@ -463,6 +463,16 @@ input  { font: inherit; }
   <div id="quotaNote">Free-tier reads reset daily</div>
 </div>
 
+<div id="loginSheet" role="dialog" aria-label="Sign in required" aria-modal="true">
+  <div class="sheetHandle"></div>
+  <div class="eyebrow">Sign in</div>
+  <h2>Sign in to see codes</h2>
+  <p class="sub">Parking codes are now visible to signed-in users only. It&rsquo;s free &mdash; signing in also lets you report codes you find.</p>
+
+  <button id="loginBtn" type="button">Sign in to Aero</button>
+  <div id="loginNote">Your map view is kept when you come back</div>
+</div>
+
 <div id="toasts"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -565,9 +575,9 @@ try {
   localMode = true;
 }
 
-// --- login gate (soft): search & report require a signed-in aero user.
-// This is UI-level gating only — the data-layer tables stay own/any since
-// aeroDB has no "authenticated users only" access tier.
+// --- login gate: search & report require a signed-in aero user.
+// The tables are read_access:'authed', so this is enforced server-side too —
+// an anonymous visitor's read gets 401 and the map shows the sign-in sheet.
 let whoKind = null; // 'user' | 'guest' | null = not yet resolved
 async function ensureWho() {
   if (whoKind === null) {
@@ -579,9 +589,7 @@ async function requireLogin() {
   if (localMode) return true; // preview mode: nothing to sign in to
   if (await ensureWho() === 'user') return true;
   toast('Sign in with your aero account to continue…');
-  setTimeout(() => {
-    location.href = '/login?next=' + encodeURIComponent(location.pathname);
-  }, 800);
+  setTimeout(goToLogin, 800);
   return false;
 }
 const scansTable = () => db.table('qr_scans');
@@ -764,7 +772,7 @@ function viewKey() {
 }
 
 let refreshTimer = null, refreshing = false, lastFetchAt = 0, lastFetchedView = null;
-let dataHalted = false; // quota exhausted — stop asking until the user retries
+let dataHalted = false; // reads are pointless right now — stop until that changes
 
 // The server rejects reads once the project's daily Firestore quota is gone.
 // It resets on its own schedule, so retrying on every pan just burns quota we
@@ -772,6 +780,19 @@ let dataHalted = false; // quota exhausted — stop asking until the user retrie
 function isQuotaRejection(e) {
   const b = e && e.body;
   return !!b && b.error === 'rejected' && /quota/i.test(b.reason || '');
+}
+
+function isAuthRejection(e) {
+  return !!e && (e.status === 401 || e.status === 403);
+}
+
+// Anonymous visitors can't read the tables at all, so retrying on every pan
+// just burns quota on 401s. Halt and point them at the login page.
+function haltForLogin() {
+  dataHalted = true;
+  clearTimeout(refreshTimer);
+  showBanner('Sign in to see parking codes near you.', 'Sign in', goToLogin);
+  openLoginSheet();
 }
 
 function haltForQuota() {
@@ -811,6 +832,8 @@ async function refreshNearby() {
   } catch (e) {
     if (isQuotaRejection(e)) {
       haltForQuota();
+    } else if (isAuthRejection(e)) {
+      haltForLogin();
     } else if (e.status === 400 && e.body && e.body.error === 'geo_not_enabled') {
       showBanner('Database not set up yet (geo flag missing on qr_locations).', '', null);
     } else {
@@ -1123,9 +1146,28 @@ function closeSheet() {
   stopGpsWatch();
 }
 
+// Preserve the map view across the login round-trip: saveLastView() already
+// runs on every moveend, so /login?next= brings them back to the same place.
+function goToLogin() {
+  location.href = '/login?next=' + encodeURIComponent(location.pathname);
+}
+
+const loginSheet = document.getElementById('loginSheet');
+function openLoginSheet() {
+  closeSheet();
+  loginSheet.classList.add('open');
+  backdrop.classList.add('open');
+}
+function closeLoginSheet() {
+  loginSheet.classList.remove('open');
+  backdrop.classList.remove('open');
+}
+document.getElementById('loginBtn').addEventListener('click', goToLogin);
+
 const quotaSheet = document.getElementById('quotaSheet');
 function openQuotaSheet() {
   closeSheet(); // only one sheet at a time
+  closeLoginSheet();
   quotaSheet.classList.add('open');
   backdrop.classList.add('open');
 }
@@ -1140,6 +1182,7 @@ document.getElementById('reportFab').addEventListener('click', async () => {
 });
 backdrop.addEventListener('click', () => {
   if (quotaSheet.classList.contains('open')) closeQuotaSheet();
+  else if (loginSheet.classList.contains('open')) closeLoginSheet();
   else closeSheet();
 });
 
