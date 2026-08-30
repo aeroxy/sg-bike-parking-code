@@ -155,7 +155,7 @@ input  { font: inherit; }
   transition: opacity .25s var(--ease);
 }
 #sheetBackdrop.open { opacity: 1; pointer-events: auto; }
-#reportSheet {
+#reportSheet, #quotaSheet {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 1600;
   background: var(--surface);
   border-radius: var(--r-xl) var(--r-xl) 0 0;
@@ -166,7 +166,7 @@ input  { font: inherit; }
   max-height: 88vh;
   overflow-y: auto;
 }
-#reportSheet.open { transform: translateY(0); }
+#reportSheet.open, #quotaSheet.open { transform: translateY(0); }
 .sheetHandle {
   width: 40px; height: 4px; border-radius: 2px;
   background: var(--border-strong); margin: 6px auto 16px;
@@ -175,11 +175,34 @@ input  { font: inherit; }
   font-family: var(--mono); font-size: 11px; font-weight: 500;
   letter-spacing: .14em; text-transform: uppercase; color: var(--fg-3);
 }
-#reportSheet h2 {
+#reportSheet h2, #quotaSheet h2 {
   font-size: 26px; line-height: .95; letter-spacing: -.04em; font-weight: 800;
   margin: 6px 0 6px;
 }
-#reportSheet .sub { color: var(--fg-2); font-size: 13.5px; margin-bottom: 18px; }
+#reportSheet .sub, #quotaSheet .sub { color: var(--fg-2); font-size: 13.5px; margin-bottom: 18px; }
+
+/* Support / quota sheet */
+#supportBtn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 14px; margin-bottom: 10px;
+  border-radius: var(--r-md);
+  background: var(--action); color: #fff;
+  font-size: 16px; font-weight: 600; text-decoration: none;
+  transition: background .15s var(--ease), transform .15s var(--ease);
+}
+#supportBtn:hover { background: var(--action-700); }
+#supportBtn:active { transform: scale(.99); }
+#quotaRetryBtn {
+  width: 100%; padding: 13px;
+  border-radius: var(--r-md);
+  background: var(--muted); color: var(--fg);
+  font-size: 15px; font-weight: 600;
+}
+#quotaRetryBtn:hover { background: var(--border); }
+#quotaNote {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .04em;
+  color: var(--fg-3); text-align: center; margin-top: 14px;
+}
 
 #cameraWrap {
   position: relative;
@@ -424,6 +447,20 @@ input  { font: inherit; }
   <div id="gpsStatus"><span id="gpsDot"></span><span id="gpsText">Waiting for GPS…</span></div>
 
   <button id="submitBtn" disabled>Submit report</button>
+</div>
+
+<div id="quotaSheet" role="dialog" aria-label="Daily quota reached" aria-modal="true">
+  <div class="sheetHandle"></div>
+  <div class="eyebrow">Out of quota</div>
+  <h2>Daily limit reached</h2>
+  <p class="sub">This map runs on a free database tier, and today&rsquo;s read allowance is used up. It resets on its own &mdash; or you can help cover a paid tier.</p>
+
+  <a id="supportBtn" href="https://buy.stripe.com/14AfZiaec9pZdMMaVi4AU01" target="_blank" rel="noopener noreferrer">
+    Support SG Bike QR
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
+  </a>
+  <button id="quotaRetryBtn" type="button">Try again</button>
+  <div id="quotaNote">Free-tier reads reset daily</div>
 </div>
 
 <div id="toasts"></div>
@@ -727,15 +764,41 @@ function viewKey() {
 }
 
 let refreshTimer = null, refreshing = false, lastFetchAt = 0, lastFetchedView = null;
+let dataHalted = false; // quota exhausted — stop asking until the user retries
+
+// The server rejects reads once the project's daily Firestore quota is gone.
+// It resets on its own schedule, so retrying on every pan just burns quota we
+// no longer have; halt and let the user decide when to try again.
+function isQuotaRejection(e) {
+  const b = e && e.body;
+  return !!b && b.error === 'rejected' && /quota/i.test(b.reason || '');
+}
+
+function haltForQuota() {
+  dataHalted = true;
+  clearTimeout(refreshTimer);
+  // Banner persists after the sheet is dismissed, so the map is never a dead end.
+  showBanner('Daily database quota reached — codes can’t load right now.', 'Try again', resumeAfterQuota);
+  openQuotaSheet();
+}
+
+function resumeAfterQuota() {
+  closeQuotaSheet();
+  hideBanner();
+  dataHalted = false;
+  refreshNow();
+}
 
 // Fetch at most once per COOLDOWN_MS, on the trailing edge of a move.
 function scheduleRefresh() {
+  if (dataHalted) return;
   clearTimeout(refreshTimer);
   const wait = Math.max(MOVE_DEBOUNCE_MS, COOLDOWN_MS - (Date.now() - lastFetchAt));
   refreshTimer = setTimeout(refreshNearby, wait);
 }
 
 async function refreshNearby() {
+  if (dataHalted) return;
   if (refreshing) { scheduleRefresh(); return; }   // retry once the in-flight one lands
   const view = viewKey();
   if (view === lastFetchedView) return;            // map hasn't moved — nothing new to ask for
@@ -746,7 +809,9 @@ async function refreshNearby() {
     renderRows(await fetchNearby(c.lat, c.lng, viewportRadiusM()));
     lastFetchedView = view;                        // only on success, so failures retry
   } catch (e) {
-    if (e.status === 400 && e.body && e.body.error === 'geo_not_enabled') {
+    if (isQuotaRejection(e)) {
+      haltForQuota();
+    } else if (e.status === 400 && e.body && e.body.error === 'geo_not_enabled') {
       showBanner('Database not set up yet (geo flag missing on qr_locations).', '', null);
     } else {
       console.warn('refreshNearby failed:', e);
@@ -1058,10 +1123,25 @@ function closeSheet() {
   stopGpsWatch();
 }
 
+const quotaSheet = document.getElementById('quotaSheet');
+function openQuotaSheet() {
+  closeSheet(); // only one sheet at a time
+  quotaSheet.classList.add('open');
+  backdrop.classList.add('open');
+}
+function closeQuotaSheet() {
+  quotaSheet.classList.remove('open');
+  backdrop.classList.remove('open');
+}
+document.getElementById('quotaRetryBtn').addEventListener('click', resumeAfterQuota);
+
 document.getElementById('reportFab').addEventListener('click', async () => {
   if (await requireLogin()) openSheet();
 });
-backdrop.addEventListener('click', closeSheet);
+backdrop.addEventListener('click', () => {
+  if (quotaSheet.classList.contains('open')) closeQuotaSheet();
+  else closeSheet();
+});
 
 submitBtn.addEventListener('click', async () => {
   const code = validateCodeField();
