@@ -899,7 +899,10 @@ function viewKey() {
 }
 
 let refreshTimer = null, refreshing = false, lastFetchAt = 0, lastFetchedView = null;
-let dataHalted = false; // reads are pointless right now — stop until that changes
+// Reads are pointless right now — stop until that changes. Checked at the top
+// of both scheduleRefresh and refreshNearby, so a timer already in flight when
+// we halt fires into a no-op and needs no cancelling.
+let dataHalted = false;
 
 // The server rejects reads once the project's daily Firestore quota is gone.
 // It resets on its own schedule, so retrying on every pan just burns quota we
@@ -917,14 +920,12 @@ function isAuthRejection(e) {
 // just burns quota on 401s. Halt and point them at the login page.
 function haltForLogin() {
   dataHalted = true;
-  clearTimeout(refreshTimer);
   showBanner('Sign in to see parking codes near you.', 'Sign in', goToLogin);
   openLoginSheet();
 }
 
 function haltForQuota() {
   dataHalted = true;
-  clearTimeout(refreshTimer);
   // Banner persists after the sheet is dismissed, so the map is never a dead end.
   showBanner('Daily database quota reached — codes can’t load right now.', 'Try again', resumeAfterQuota);
   openQuotaSheet();
