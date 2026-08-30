@@ -157,8 +157,7 @@ await fetch('/api/db/sg-bike-qr/tables/qr_locations', {
   There's no way to flag or remove a bad pin yet; the median makes bad reports
   less damaging, not impossible.
 - **Dense areas may return partial results.** A `near` query in a busy spot can
-  hit its scan budget, in which case the app says so instead of pretending the
-  list is complete.
+  hit its scan budget and silently drop codes; zoom in for the full list.
 - **No offline support.** Tiles, search and data all need a connection.
 
 ## Contributing

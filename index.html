@@ -522,7 +522,7 @@ const MIN_RADIUS_M = 250;        // near-query radius clamp (viewport-derived)
 const MAX_RADIUS_M = 50000;      // server cap
 const NEAR_LIMIT = 50;
 const COOLDOWN_MS = 10000;   // minimum gap between nearby-code fetches
-const INITIAL_FETCH_MS = 2000;  // grace period for geolocation to land before the first fetch
+const INITIAL_FETCH_MS = 3000;  // deadline for geolocation to land before falling back to a viewport fetch
 const MOVE_DEBOUNCE_MS = 500;
 const SEARCH_DEBOUNCE_MS = 600;
 // Nominatim asks for an identifying contact on heavy use. Set before launch
@@ -749,7 +749,6 @@ const PIN_CH_W = 7.5;        // rendered width of one mono character, px
 const PIN_PAD = 6;           // border + arrow tail below the anchor, px
 
 let userMarker = null, userAccCircle = null;
-let partialNoticeShown = false;
 
 function popupHtml(code, data, distanceMeters) {
   const dist = distanceMeters != null && isFinite(distanceMeters)
@@ -881,10 +880,6 @@ function renderRows(rows) {
     if (!seen.has(code)) codeStore.delete(code);
   }
   renderPins();
-  if (rows.partial && !partialNoticeShown) {
-    partialNoticeShown = true; // once per session is enough
-    toast('Busy area — some codes may be missing. Zoom in for full results.');
-  }
 }
 
 function viewportRadiusM() {
@@ -1376,6 +1371,7 @@ function locateAndCenter(showErrors) {
     map.setView([lat, lng], 17);
     refreshNow(); // the saved-view fetch was for the wrong place
   }, () => {
+    refreshNow(); // a denial or failure is a definitive "no fix" — don't wait out the deadline
     if (showErrors) {
       showBanner('Enable location to see codes near you.', 'Retry', () => locateAndCenter(true));
     }
@@ -1391,8 +1387,8 @@ if (localMode) {
   ensureWho(); // resolve the visitor's kind early so the first gated tap is instant
 }
 locateAndCenter(true);
-// Hold the first fetch briefly: if geolocation answers within the grace
-// period it calls refreshNow() and this timer no-ops on the view guard.
+// Fallback only: geolocation answering (or failing) calls refreshNow(), which
+// clears this timer. It fires solely when the fix is still pending at the deadline.
 refreshTimer = setTimeout(refreshNearby, INITIAL_FETCH_MS);
 </script>
 </body>
