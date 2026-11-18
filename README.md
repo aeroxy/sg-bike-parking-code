@@ -3,7 +3,7 @@
 Find the nearest bike-share parking QR sticker in Singapore — and help map the
 ones nobody has found yet.
 
-**Live app: <https://aero.oops.wtf/p/sg-bike-qr>**
+**Live app: <https://sg-bike-qr.vercel.app>**
 
 ## The problem
 
@@ -19,7 +19,9 @@ layer: report a code once, and everyone can find it afterwards.
 ## How it works
 
 - **Browse** — the map shows known QR stickers near you, or near any place you
-  search for. No sign-in needed to look around.
+  search for. Seeing codes needs a free sign-in with [Aero](https://aero.oops.wtf).
+- **Riding with** — pick the operator you're riding with, and the map leaves
+  out stickers that can't end your ride.
 - **Report** — stand next to a sticker, scan it with your camera (or type the
   code), and submit. Your GPS position is attached to the report.
 - **Self-correcting** — every report of the same code is stored separately, and
@@ -27,51 +29,67 @@ layer: report a code once, and everyone can find it afterwards.
   gets outvoted as more people report the same sticker; the pin gets more
   accurate over time rather than being overwritten by whoever reported last.
 
-Codes are validated as three letters plus four characters (`ABC-1234`). The
-dash is inserted for you — just type or scan.
+### Whose sticker is it
 
-## This is an Aero app
+LTA's QR code parking system puts a sticker at every bicycle parking zone, and
+any operator's bike can end a ride there. Some operators also print stickers of
+their own for zones only their bikes may use. The code's shape tells them apart:
 
-[Aero](https://aero.oops.wtf) is an app-building and hosting platform where each
-app is a single self-contained HTML page published at `/p/{name}`. This project
-is one such page — [`index.html`](index.html), about a thousand lines with all
-CSS and JavaScript inlined.
+| Sticker | Code | Example | Rides that can end there |
+|---|---|---|---|
+| LTA | 3 letters + 4 letters or digits | `ABC-1234` | any operator |
+| HelloRide | 4 letters + 3 digits | `GRAB-001` | HelloRide only |
 
-There is **no backend in this repository**, and no build step, bundler, or
-framework. Aero provides the server side:
+Without the dash the two can be confused (`GRAB001` is also `GRA-B001`), so the
+report form asks which sticker it is, then places the dash itself. Anywheel may
+have stickers of its own too; nobody has seen one yet. Supporting a new kind is
+one row in `FORMATS` in [`src/codes.rs`](src/codes.rs): the page builds its
+sticker switch and code checks from that list. A scanned QR code's text is kept
+with its report, so the first one of a new kind shows what it looks like.
 
-- **aeroDB** — the page's own database, reached from the browser via
-  `<script src="/aero-db.js">`. No API keys, no config, no SDK to install:
-  requests go same-origin and ride the visitor's Aero session cookie (or an
-  automatic anonymous guest cookie). Access rules are configured per table on
-  the platform, not in this code.
-- **Geo queries** — aeroDB's `near` query returns rows within a radius, sorted
-  nearest-first with distances already computed, so the app never has to fetch
-  the whole table and filter client-side.
+## How it's built
 
-Because the data client uses same-origin requests, **the page only reaches
-aeroDB when served from Aero itself**. Opening `index.html` from disk or hosting
-it elsewhere won't connect — see Local development below.
+```
+public/index.html   the whole front end: one page, CSS and JavaScript inlined, no build step
+api/server.rs       the API as one Vercel Function (Rust, axum)
+src/                the API itself: codes.rs (sticker formats), geo.rs, auth.rs, lib.rs (routes)
+aero-app/           the page at the app's old Aero address, which sends visitors here
+scripts/export.py   the one-time export from Aero's Firestore, at the move
+```
 
-The visual design follows Aero's house style: warm paper, near-black ink, one
-orange accent for things you can click and blue for things that are true.
+- **Data** lives in MongoDB Atlas. The API is the only client; the browser never
+  sees a connection string.
+- **Sign-in** is [Login with Aero](https://aero.oops.wtf/connect): Aero's consent
+  screen sends the browser back to `/auth/aero` with an encrypted token (PASETO
+  `v4.local`) holding the visitor's email. The page keeps it as an opaque string
+  and sends it as a bearer token; the API decrypts it on each call. The page
+  takes the token out of the address bar before anything else runs, analytics
+  included.
+- **Geo queries** use MongoDB's `2dsphere` index: `$geoNear` returns the stickers
+  within the map's radius, nearest first, with their distances.
 
 ### Data model
 
-Two tables, both configured on the Aero side:
+| Collection | Contents |
+|---|---|
+| `qr_scans` | One document per report: `code`, `lat`, `lng`, GPS `accuracy`, `source` (`scan` or `manual`), `raw` (a scanned QR code's text), `clientTimestamp`, `createdAt`, `_owner` (the reporter's email) |
+| `qr_locations` | One document per code, `_id` being the code: the median `lat`/`lng` and a GeoJSON `location` for the index, `operator` (`lta` or `helloride`), `numReports`, `lastReportAt`, `createdAt`, `updatedAt`, `_owner` (the first reporter) |
 
-| Table | Contents | Read | Write | Geo |
-|---|---|---|---|---|
-| `qr_scans` | One row per individual report: code, lat/lng, GPS accuracy, timestamp | public | own | — |
-| `qr_locations` | One row per code (row id *is* the code): median position, report count, last-reported time | public | any | **yes** |
+The API writes `qr_locations` itself, recomputing a pin each time its code is
+reported; nobody can set a pin directly. No response carries `_owner`.
 
-`qr_locations` must be created with geo enabled **before its first write** —
-rows written earlier never get a geohash and stay invisible to `near` queries
-forever, with no backfill.
+### API
+
+| Method | Path | Sign-in | |
+|---|---|---|---|
+| `GET` | `/api/formats` | — | the sticker formats |
+| `GET` | `/api/near?lat&lng&radius_m[&riding]` | yes | pins within the radius (250 m–50 km), nearest first, at most 50; `riding` is `any`, `helloride` or `anywheel` |
+| `POST` | `/api/scans` | yes | a report: `{code, lat, lng, accuracy, source, raw?, clientTimestamp?}`; answers with the code's pin as it now stands |
+| `GET` | `/api/sign-in?state=` | — | sends the browser to Aero's consent screen |
 
 ## Third-party pieces
 
-Everything else is loaded from a CDN or called at runtime; nothing is vendored:
+Loaded from a CDN or called at runtime; nothing is vendored:
 
 - [Leaflet](https://leafletjs.com/) for the map
 - [OpenStreetMap](https://www.openstreetmap.org/copyright) raster tiles
@@ -81,86 +99,75 @@ Everything else is loaded from a CDN or called at runtime; nothing is vendored:
 - The browser's native `BarcodeDetector` for QR scanning — no scanning library.
   It isn't available on iOS Safari, which is why manual entry is always
   present rather than a fallback you have to find.
+- Google Analytics, the same property Aero reports into
 
 ## Local development
 
-Open `index.html` in a browser and it runs against an **in-memory mock
-database** seeded with a few fake pins near Raffles Place — enough to exercise
-the map, markers, popups, search, validation and the median maths without
-publishing anything. A banner makes it obvious that nothing is being saved.
+Open `public/index.html` straight from disk and it runs on built-in sample data
+near Raffles Place: enough to exercise the map, pins, popups, search, the
+sticker switch, validation and the median maths without a server. A banner
+makes it obvious that nothing is being saved.
 
-The mock mirrors the aeroDB client surface, including `near` queries with
-distances, so the same application code runs in both modes.
-
-What can't be tested this way: real data, and the camera scanner (which needs a
-device with a camera and `BarcodeDetector` — Chrome on Android).
-
-## Publishing
+The page and the API together, against the database in `.env`:
 
 ```
-cp .env.example .env      # then paste a token from https://aero.oops.wtf/connect
-./deploy.sh --check       # verify size and digest, publish nothing
-./deploy.sh               # publish
+cp .env.example .env       # then fill it in
+cargo run --bin dev        # http://127.0.0.1:8787
+cargo test
 ```
 
-[`deploy.sh`](deploy.sh) talks to Aero's MCP server, but the document itself
-never travels as an MCP argument. It mints a one-shot upload token with
-`create_page_upload` and then `PUT`s the bytes over HTTP.
+That database is the real one, so mind what you report. Signing in ends at the
+deployed callback, so the local page can't sign in by itself.
 
-That split matters because `index.html` is ~42 KB. MCP arguments are JSON an
-agent authors, so publishing inline means re-emitting the whole document token
-by token, with no integrity check at the end — a character lost along the way
-publishes live and reports success. `create_page_upload` commits the file's
-sha256 **before any bytes move**, so a corrupted body is rejected with 422 and
-nothing is published. Uploads otherwise behave exactly like `update_page`:
-same validation, same side effects, same entry in the page's version history.
+## Deploying
 
-Transfer tokens are **owner-only**. If you're a contributor rather than the
-page's owner, `deploy.sh` won't work for you — send a pull request instead.
+1. Import this repository as a Vercel project named `sg-bike-qr`. `vercel.json`
+   does the rest: Vercel serves `public/` as it is, builds `api/server.rs` as a
+   function in Singapore (`sin1`, next to the Atlas cluster), and rewrites
+   `/api/*` to it.
+2. Set `MONGO_DB`, `AERO_CLIENT_ID` and `AERO_LOGIN_KEY` in the project's
+   environment variables (see [`.env.example`](.env.example)). The Atlas user
+   should be able to read and write this app's database and nothing else; the
+   API creates its indexes on start.
+3. Push to `main`.
 
-### Checking for drift
+Login with Aero is registered with the callback
+`https://sg-bike-qr.vercel.app/auth/aero`. A registration can't be edited, so
+another address means registering again for a new client id and key.
 
-`--check` also answers "is the deployed page still what's in git?" — it reports
-the live page's digest alongside the local one and never transfers the
-document:
+### The old Aero address
 
-```json
-{"sha256":"eb60b46f…","current_sha256":"eb60b46f…","changed":false,"would_publish":true}
+The app used to live at `https://aero.oops.wtf/p/sg-bike-qr`, on Aero's page
+database. [`aero-app/index.html`](aero-app/index.html) now sits there and sends
+visitors here; [`aero-app/deploy.sh`](aero-app/deploy.sh) publishes it (or any
+other file) with the `AERO_TOKEN` from `.env`:
+
+```
+aero-app/deploy.sh --check   # verify size and digest, publish nothing
+aero-app/deploy.sh           # publish
 ```
 
-`changed: false` means the live page is already identical to your working tree.
+### Moving the data
 
-### Table access
-
-Table access is **not** exposed over MCP today — after the first publish,
-configure both tables once from the Aero web UI (Apps → the page → Database), or from the browser
-console while signed in:
-
-```js
-await fetch('/api/db/sg-bike-qr/tables/qr_scans', {
-  method: 'PUT', credentials: 'same-origin',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ read_access: 'public', write_access: 'own' }),
-}).then(r => r.json());
-
-await fetch('/api/db/sg-bike-qr/tables/qr_locations', {
-  method: 'PUT', credentials: 'same-origin',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ read_access: 'public', write_access: 'any', geo: true }),
-}).then(r => r.json());
-```
+The reports and pins came over from Aero's Firestore once, at the move:
+[`scripts/export.py`](scripts/export.py) prints both tables (run it wherever
+gcloud is signed in with access, such as Cloud Shell), and
+`cargo run --bin import -- export.ndjson` checks the export, writes it into
+MongoDB and reads it all back to compare. The import never deletes, and it
+refuses to run once the new app has taken reports, since it would move their
+pins back. The export holds reporters' emails, so it doesn't belong in this
+repository.
 
 ## Known limitations
 
-- **No moderation.** Reports are sanity-checked client-side only — GPS accuracy
-  better than 100 m, coordinates inside Singapore, and a valid code format.
-  There's no way to flag or remove a bad pin yet; the median makes bad reports
-  less damaging, not impossible.
-- **Dense areas may return partial results.** A `near` query in a busy spot can
-  hit its scan budget and silently drop codes; zoom in for the full list.
+- **No moderation.** Reports are checked for a GPS fix within 100 m, a position
+  inside Singapore and a valid code, but there's no way to flag or remove a bad
+  pin yet; the median makes bad reports less damaging, not impossible.
+- **Anywheel-only stickers** can't be reported until someone has seen one.
 - **No offline support.** Tiles, search and data all need a connection.
 
 ## Contributing
 
-The whole app is one file. Edit [`index.html`](index.html), open it in a browser
-to check your change against the mock database, and publish.
+The front end is one file, [`public/index.html`](public/index.html), and the API
+is a small Rust crate. Open the page from disk to check a change against the
+sample data, run `cargo test`, and send a pull request.

@@ -5,6 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#FCFCF9">
 <title>SG Bike Parking QR Finder</title>
+<script>
+// Sign in with Aero answers on /auth/aero with the token in the fragment.
+// Keep it (only if this browser started that sign-in: its `state` matches)
+// and take it out of the address bar before anything else, analytics
+// included, can see it.
+var signInResult = (function () {
+  if (location.pathname !== '/auth/aero') return null;
+  var answer = new URLSearchParams(location.hash.slice(1)), expected = null, result = 'failed';
+  try { expected = sessionStorage.getItem('bikeqr.sign-in-state'); sessionStorage.removeItem('bikeqr.sign-in-state'); } catch (e) {}
+  var token = answer.get('aero_identity');
+  if (token && expected && answer.get('state') === expected) {
+    try { localStorage.setItem('bikeqr.session', token); result = 'ok'; } catch (e) {}
+  } else if (answer.get('error') === 'access_denied') {
+    result = 'cancelled';
+  }
+  history.replaceState(null, '', '/');
+  return result;
+})();
+</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-91SNPT9G03"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config","G-91SNPT9G03");</script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230B0B0B'/%3E%3Cpath d='M4 4h11v11H4zM17 4h11v11H17zM4 17h11v11H4z' fill='%23FCFCF9'/%3E%3Cpath d='M6.5 6.5h6v6h-6zM19.5 6.5h6v6h-6zM6.5 19.5h6v6h-6z' fill='%230B0B0B'/%3E%3Cpath d='M8.5 8.5h2v2h-2zM21.5 8.5h2v2h-2zM8.5 21.5h2v2h-2z' fill='%23FCFCF9'/%3E%3Crect x='18' y='18' width='10' height='10' rx='2.5' fill='%23D85A30'/%3E%3C/svg%3E">
 <link rel="apple-touch-icon" href="data:image/png;base64,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">
 <meta name="apple-mobile-web-app-title" content="Bike QR">
@@ -34,6 +55,8 @@
   --sans: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, "SF Mono", "Roboto Mono", Menlo, Consolas, monospace;
   --ease: cubic-bezier(.2,.7,.2,1);
+  --footer-h: 30px;
+  --bottom: calc(env(safe-area-inset-bottom, 0px) + var(--footer-h));
 }
 
 /* ============================================================
@@ -47,7 +70,7 @@ body {
   background: var(--paper);
   -webkit-tap-highlight-color: transparent;
 }
-#map { position: fixed; inset: 0; z-index: 0; background: var(--paper); }
+#map { position: fixed; inset: 0 0 var(--bottom) 0; z-index: 0; background: var(--paper); }
 
 button { font: inherit; border: none; cursor: pointer; background: none; }
 input  { font: inherit; }
@@ -107,13 +130,39 @@ input  { font: inherit; }
 #searchResults .result small { display: block; color: var(--fg-3); margin-top: 2px; font-size: 12px; }
 #searchResults .none { padding: 13px 16px; color: var(--fg-3); font-size: 13.5px; }
 
+/* "Riding with": which operator's stickers the map shows */
+#ridingBar {
+  display: inline-flex; align-items: center; gap: 2px;
+  margin-top: 8px; padding: 3px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
+}
+#ridingBar .ridingLabel {
+  font-family: var(--mono); font-size: 10px; font-weight: 500;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--fg-3);
+  padding: 0 6px 0 7px;
+}
+#ridingBar button {
+  height: 28px; padding: 0 10px;
+  border-radius: var(--r-sm);
+  border: 1px solid transparent;
+  font-size: 13px; font-weight: 600; color: var(--fg-2);
+  transition: background .15s var(--ease), color .15s var(--ease);
+}
+#ridingBar button:hover { color: var(--fg); }
+#ridingBar button[aria-checked="true"] {
+  background: var(--status-soft); border-color: var(--status-300); color: var(--status-700);
+}
+
 /* ============================================================
    Floating buttons (locate + report FAB)
    ============================================================ */
 #locateBtn {
   position: fixed;
   right: 16px;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 96px);
+  bottom: calc(var(--bottom) + 88px);
   z-index: 1000;
   width: 46px; height: 46px;
   border-radius: var(--r-md);
@@ -128,7 +177,7 @@ input  { font: inherit; }
 #reportFab {
   position: fixed;
   right: 16px;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+  bottom: calc(var(--bottom) + 16px);
   z-index: 1000;
   height: 52px;
   border-radius: var(--r-md);
@@ -155,7 +204,7 @@ input  { font: inherit; }
   transition: opacity .25s var(--ease);
 }
 #sheetBackdrop.open { opacity: 1; pointer-events: auto; }
-#reportSheet, #quotaSheet, #loginSheet {
+#reportSheet, #loginSheet {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 1600;
   background: var(--surface);
   border-radius: var(--r-xl) var(--r-xl) 0 0;
@@ -166,7 +215,7 @@ input  { font: inherit; }
   max-height: 88vh;
   overflow-y: auto;
 }
-#reportSheet.open, #quotaSheet.open, #loginSheet.open { transform: translateY(0); }
+#reportSheet.open, #loginSheet.open { transform: translateY(0); }
 .sheetHandle {
   width: 40px; height: 4px; border-radius: 2px;
   background: var(--border-strong); margin: 6px auto 16px;
@@ -175,14 +224,14 @@ input  { font: inherit; }
   font-family: var(--mono); font-size: 11px; font-weight: 500;
   letter-spacing: .14em; text-transform: uppercase; color: var(--fg-3);
 }
-#reportSheet h2, #quotaSheet h2, #loginSheet h2 {
+#reportSheet h2, #loginSheet h2 {
   font-size: 26px; line-height: .95; letter-spacing: -.04em; font-weight: 800;
   margin: 6px 0 6px;
 }
-#reportSheet .sub, #quotaSheet .sub, #loginSheet .sub { color: var(--fg-2); font-size: 13.5px; margin-bottom: 18px; }
+#reportSheet .sub, #loginSheet .sub { color: var(--fg-2); font-size: 13.5px; margin-bottom: 18px; }
 
-/* Support / quota sheet */
-#supportBtn, #loginBtn {
+/* Sign-in sheet */
+#loginBtn {
   display: flex; align-items: center; justify-content: center; gap: 8px;
   width: 100%; padding: 14px; margin-bottom: 10px;
   border-radius: var(--r-md);
@@ -190,16 +239,9 @@ input  { font: inherit; }
   font-size: 16px; font-weight: 600; text-decoration: none;
   transition: background .15s var(--ease), transform .15s var(--ease);
 }
-#supportBtn:hover, #loginBtn:hover { background: var(--action-700); }
-#supportBtn:active, #loginBtn:active { transform: scale(.99); }
-#quotaRetryBtn {
-  width: 100%; padding: 13px;
-  border-radius: var(--r-md);
-  background: var(--muted); color: var(--fg);
-  font-size: 15px; font-weight: 600;
-}
-#quotaRetryBtn:hover { background: var(--border); }
-#quotaNote, #loginNote {
+#loginBtn:hover { background: var(--action-700); }
+#loginBtn:active { transform: scale(.99); }
+#loginNote {
   font-family: var(--mono); font-size: 11px; letter-spacing: .04em;
   color: var(--fg-3); text-align: center; margin-top: 14px;
 }
@@ -243,6 +285,22 @@ input  { font: inherit; }
   border: 2px solid rgba(255,255,255,.85);
   border-radius: var(--r-lg);
 }
+
+/* Which sticker: it decides the code's format, and where the dash goes */
+#stickerSwitch { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; margin-bottom: 16px; }
+#stickerSwitch button {
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  transition: border-color .15s var(--ease), background .15s var(--ease);
+}
+#stickerSwitch button:hover { border-color: var(--border-strong); }
+#stickerSwitch button strong { display: block; font-size: 15px; font-weight: 700; color: var(--fg); }
+#stickerSwitch button span { display: block; font-size: 12px; color: var(--fg-3); margin-top: 1px; }
+#stickerSwitch button[aria-checked="true"] { border-color: var(--action); background: var(--action-soft); box-shadow: var(--shadow-focus); }
+#stickerSwitch button[aria-checked="true"] span { color: var(--action-700); }
 
 .field label {
   display: block;
@@ -296,7 +354,7 @@ input  { font: inherit; }
    ============================================================ */
 #banner {
   position: fixed;
-  top: calc(env(safe-area-inset-top, 0px) + 68px);
+  top: calc(env(safe-area-inset-top, 0px) + 108px);
   left: 12px; right: 12px;
   z-index: 900;
   background: var(--surface);
@@ -316,7 +374,7 @@ input  { font: inherit; }
 #toasts {
   position: fixed;
   left: 0; right: 0;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 92px);
+  bottom: calc(var(--bottom) + 84px);
   z-index: 2000;
   display: flex; flex-direction: column; align-items: center; gap: 8px;
   pointer-events: none;
@@ -364,6 +422,15 @@ input  { font: inherit; }
 .pinRow + .pinRow { border-top: 1px solid rgba(255,255,255,.22); }
 .pinRow:active { background: rgba(255,255,255,.18); }
 .pinMore { color: rgba(255,255,255,.72); font-size: 10px; letter-spacing: .04em; }
+/* An operator's own sticker: only its bikes can end a ride there */
+.pinOp {
+  display: inline-block;
+  background: var(--status); color: #fff;
+  border-radius: 3px;
+  font-size: 9px; font-weight: 700; letter-spacing: .04em;
+  padding: 0 3px; margin-right: 5px;
+  vertical-align: 1px;
+}
 .codePin::after {
   content: "";
   position: absolute;
@@ -388,6 +455,9 @@ input  { font: inherit; }
   margin: 6px 0 12px;
   font-variant-numeric: tabular-nums;
 }
+.popupOp { font-size: 12.5px; color: var(--fg-2); margin: -4px 0 12px; max-width: 230px; }
+.popupOp.only { color: var(--status-700); }
+.popupOp strong { font-weight: 700; }
 .popupLinks { display: flex; gap: 8px; }
 .popupLinks a, .popupLinks .copyBtn {
   flex: 1;
@@ -422,6 +492,20 @@ input  { font: inherit; }
 .popupListCode { font-family: var(--mono); font-size: 13px; font-weight: 700; letter-spacing: .06em; color: var(--fg); }
 .popupListMeta { font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--fg-3); }
 
+/* Footer: keeping the map free */
+#chipIn {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000;
+  min-height: var(--bottom);
+  padding: 0 12px env(safe-area-inset-bottom, 0px);
+  display: flex; align-items: center; justify-content: center;
+  background: var(--paper);
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--fg-3);
+  text-align: center;
+}
+#chipIn a { color: var(--action); font-weight: 600; text-decoration: none; margin-left: 4px; }
+#chipIn a:hover { color: var(--action-700); text-decoration: underline; }
+
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
@@ -440,6 +524,12 @@ input  { font: inherit; }
     </button>
   </div>
   <div id="searchResults"></div>
+  <div id="ridingBar" role="radiogroup" aria-label="Riding with">
+    <span class="ridingLabel">Riding</span>
+    <button type="button" role="radio" data-riding="any" aria-checked="true">Any</button>
+    <button type="button" role="radio" data-riding="helloride" aria-checked="false">HelloRide</button>
+    <button type="button" role="radio" data-riding="anywheel" aria-checked="false">Anywheel</button>
+  </div>
 </div>
 
 <div id="banner"><span id="bannerText"></span><button id="bannerAction"></button></div>
@@ -468,6 +558,11 @@ input  { font: inherit; }
   </div>
 
   <div class="field">
+    <label id="stickerLabel">Sticker</label>
+    <div id="stickerSwitch" role="radiogroup" aria-labelledby="stickerLabel"></div>
+  </div>
+
+  <div class="field">
     <label for="codeInput">Code on the sticker</label>
     <input id="codeInput" placeholder="ABC-1234" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="8">
     <div id="codeError"></div>
@@ -478,150 +573,155 @@ input  { font: inherit; }
   <button id="submitBtn" disabled>Submit report</button>
 </div>
 
-<div id="quotaSheet" role="dialog" aria-label="Daily quota reached" aria-modal="true">
-  <div class="sheetHandle"></div>
-  <div class="eyebrow">Out of quota</div>
-  <h2>Daily limit reached</h2>
-  <p class="sub">This map runs on a free database tier, and today&rsquo;s read allowance is used up. It resets on its own &mdash; or you can help cover a paid tier.</p>
-
-  <a id="supportBtn" href="https://buy.stripe.com/14AfZiaec9pZdMMaVi4AU01" target="_blank" rel="noopener noreferrer">
-    Support SG Bike QR
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
-  </a>
-  <button id="quotaRetryBtn" type="button">Try again</button>
-  <div id="quotaNote">Free-tier reads reset daily</div>
-</div>
-
 <div id="loginSheet" role="dialog" aria-label="Sign in required" aria-modal="true">
   <div class="sheetHandle"></div>
   <div class="eyebrow">Sign in</div>
   <h2>Sign in to see codes</h2>
-  <p class="sub">Parking codes are now visible to signed-in users only. It&rsquo;s free &mdash; signing in also lets you report codes you find.</p>
+  <p class="sub">Parking codes are visible to signed-in users only. It&rsquo;s free &mdash; signing in also lets you report codes you find.</p>
 
-  <button id="loginBtn" type="button">Sign in to Aero</button>
+  <button id="loginBtn" type="button">Sign in with Aero</button>
   <div id="loginNote">Your map view is kept when you come back</div>
 </div>
+
+<footer id="chipIn">Free and crowd-sourced. If it saves you a walk, <a href="https://aero-sg.us.to" target="_blank" rel="noopener">chip in</a></footer>
 
 <div id="toasts"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="/aero-db.js"></script>
 <script>
 'use strict';
 /* ============================================================
    Section 1 — Config & constants
    ============================================================ */
-const CODE_RE = /^[A-Z]{3}-[0-9A-Z]{4}$/;
-// Loose variant used to pull a code out of scanned QR payloads (which may
-// be a URL containing the code) and to auto-insert the dash while typing.
-const CODE_ANYWHERE_RE = /[A-Z]{3}-?[0-9A-Z]{4}/;
 const SG_CENTER = [1.3521, 103.8198];
 const SG_BBOX = { minLat: 1.15, maxLat: 1.48, minLng: 103.6, maxLng: 104.1 };
-const MAX_ACCURACY_M = 100;      // reject fixes worse than this at submit
+const MAX_ACCURACY_M = 100;      // reject fixes worse than this at submit (the API checks too)
 const MIN_RADIUS_M = 250;        // near-query radius clamp (viewport-derived)
 const MAX_RADIUS_M = 50000;      // server cap
-const NEAR_LIMIT = 50;
 const INITIAL_FETCH_MS = 3000;  // deadline for geolocation to land before falling back to a viewport fetch
 const MOVE_DEBOUNCE_MS = 2000;  // how long the map must sit still before we fetch for the new view
 const SEARCH_DEBOUNCE_MS = 600;
 // Nominatim asks for an identifying contact on heavy use. Set before launch
-// or leave blank for light usage. See refs/PLAN.md.
+// or leave blank for light usage.
 const NOMINATIM_EMAIL = '';
+// Kept on the device. The session token is set by the sign-in code in <head>.
+const SESSION_KEY = 'bikeqr.session';
+const SIGN_IN_STATE_KEY = 'bikeqr.sign-in-state';
+const RIDING_KEY = 'bikeqr.riding';
+// Operators with stickers of their own (or perhaps, as for Anywheel, not
+// yet). LTA's stickers, which every operator honours, need no name here.
+const OPERATORS = {
+  helloride: { name: 'HelloRide', badge: 'HR' },
+  anywheel: { name: 'Anywheel', badge: 'AW' },
+};
 
 /* ============================================================
-   Section 2 — aeroDB access layer (real when hosted, mock otherwise)
+   Section 2 — Data access: the API when served, sample data from disk
    ============================================================ */
-// The in-memory mock mirrors the aero-db.js Table surface (add/get/set/
-// patch/list incl. `near` with _distanceMeters and nearest-first ordering)
-// so the whole app can be exercised locally before the page is published.
-function makeMockDb() {
-  const store = {}; // table -> Map(id -> row)
-  let autoId = 1;
-  const seed = [
-    { code: 'ABC-1234', lat: 1.28409, lng: 103.85148, numReports: 4, lastReportAt: Date.now() - 3600e3 },
-    { code: 'DEF-9B2K', lat: 1.28311, lng: 103.85302, numReports: 2, lastReportAt: Date.now() - 86400e3 },
-    { code: 'GHI-77XQ', lat: 1.28672, lng: 103.85455, numReports: 9, lastReportAt: Date.now() - 7200e3 },
-    { code: 'JKL-3C41', lat: 1.28150, lng: 103.86020, numReports: 1, lastReportAt: Date.now() - 5 * 86400e3 },
-  ];
-  function tbl(name) {
-    if (!store[name]) store[name] = new Map();
-    return store[name];
-  }
-  seed.forEach(s => tbl('qr_locations').set(s.code, {
-    id: s.code, data: s, createTime: '', updateTime: '',
-  }));
-  return {
-    mock: true,
-    table(name) {
-      const t = tbl(name);
-      return {
-        async add(data) {
-          const id = 'mock-' + autoId++;
-          const row = { id, data: { ...data, _owner: 'mock' }, createTime: '', updateTime: '' };
-          t.set(id, row);
-          return row;
-        },
-        async get(id) { return t.get(id) || null; },
-        async set(id, data) {
-          const row = { id, data: { ...data }, createTime: '', updateTime: '' };
-          t.set(id, row);
-          return row;
-        },
-        async patch(id, data) {
-          const row = t.get(id);
-          if (!row) { const e = new Error('not_found'); e.status = 404; throw e; }
-          Object.assign(row.data, data);
-          return row;
-        },
-        async delete(id) { t.delete(id); return { ok: true }; },
-        async list(opts = {}) {
-          let rows = [...t.values()];
-          if (opts.eq) {
-            rows = rows.filter(r => Object.entries(opts.eq).every(([k, v]) => r.data[k] === v));
-          }
-          if (opts.near) {
-            const { lat, lng, radiusMeters } = opts.near;
-            rows = rows
-              .map(r => ({ ...r, _distanceMeters: haversineM(lat, lng, r.data.lat, r.data.lng) }))
-              .filter(r => r._distanceMeters <= radiusMeters)
-              .sort((a, b) => a._distanceMeters - b._distanceMeters);
-          }
-          const off = opts.offset || 0;
-          return rows.slice(off, off + (opts.limit || 50));
-        },
-      };
+// Opened straight from disk there is no API, so the page runs on built-in
+// sample data near Raffles Place through the same three calls: enough to
+// exercise the map, pins, popups, search, validation and the median maths.
+const localMode = location.protocol === 'file:';
+
+// Storage can throw (private windows, blocked site data). Signing in then
+// lasts only as long as the page.
+function readStore(storage, key) {
+  try { return storage.getItem(key); } catch (_) { return null; }
+}
+function writeStore(storage, key, value) {
+  try { value === null ? storage.removeItem(key) : storage.setItem(key, value); } catch (_) {}
+}
+const sessionToken = () => readStore(localStorage, SESSION_KEY);
+const signedIn = () => localMode || !!sessionToken();
+
+class ApiError extends Error {
+  constructor(message, status) { super(message); this.status = status; }
+}
+
+// The token rides along as a bearer token. One the API refuses (401) is
+// forgotten here, so the page asks for a new sign-in.
+async function api(path, body) {
+  const token = sessionToken();
+  const res = await fetch(path, {
+    method: body ? 'POST' : 'GET',
+    headers: {
+      ...(token ? { Authorization: 'Bearer ' + token } : {}),
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
     },
-    async whoami() { return { kind: 'guest', id: 'mock' }; },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (res.status === 401) writeStore(localStorage, SESSION_KEY, null);
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new ApiError((data && data.error) || `The server answered ${res.status}.`, res.status);
+  return data;
+}
+
+const remote = {
+  formats: () => api('/api/formats'),
+  near: (lat, lng, radiusMeters, riding) =>
+    api(`/api/near?lat=${lat}&lng=${lng}&radius_m=${Math.round(radiusMeters)}&riding=${riding}`).then(r => r.codes),
+  report: scan => api('/api/scans', scan),
+};
+
+function makeMock() {
+  const formats = [
+    { operator: 'lta', label: 'LTA', scope: 'Any operator', head: 3, tail: 4, tailDigitsOnly: false,
+      example: 'ABC-1234', hint: '3 letters + 4 letters or digits' },
+    { operator: 'helloride', label: 'HelloRide', scope: 'HelloRide only', head: 4, tail: 3, tailDigitsOnly: true,
+      example: 'GRAB-001', hint: '4 letters + 3 digits' },
+  ];
+  const pins = new Map([
+    { code: 'ABC-1234', operator: 'lta', lat: 1.28409, lng: 103.85148, numReports: 4, lastReportAt: Date.now() - 3600e3 },
+    { code: 'DEF-9B2K', operator: 'lta', lat: 1.28311, lng: 103.85302, numReports: 2, lastReportAt: Date.now() - 86400e3 },
+    { code: 'GHI-77XQ', operator: 'lta', lat: 1.28672, lng: 103.85455, numReports: 9, lastReportAt: Date.now() - 7200e3 },
+    { code: 'GRAB-001', operator: 'helloride', lat: 1.28150, lng: 103.86020, numReports: 1, lastReportAt: Date.now() - 5 * 86400e3 },
+  ].map(p => [p.code, p]));
+  const reports = new Map(); // code -> [{ lat, lng }]
+  return {
+    async formats() { return formats; },
+    async near(lat, lng, radiusMeters, riding) {
+      return [...pins.values()]
+        .filter(p => riding === 'any' || p.operator === 'lta' || p.operator === riding)
+        .map(p => ({ ...p, distanceMeters: haversineM(lat, lng, p.lat, p.lng) }))
+        .filter(p => p.distanceMeters <= radiusMeters)
+        .sort((a, b) => a.distanceMeters - b.distanceMeters)
+        .slice(0, 50);
+    },
+    async report(scan) {
+      const format = formats.find(f => codeFits(scan.code, f));
+      const list = [...(reports.get(scan.code) || []), scan];
+      reports.set(scan.code, list);
+      const pin = {
+        code: scan.code, operator: format.operator,
+        lat: median(list.map(s => s.lat)), lng: median(list.map(s => s.lng)),
+        numReports: list.length, lastReportAt: Date.now(),
+      };
+      pins.set(scan.code, pin);
+      return pin;
+    },
   };
 }
+const db = localMode ? makeMock() : remote;
 
-let db, localMode = false;
-try {
-  db = AeroDB.current(); // throws off /p/... URLs; ReferenceError when /aero-db.js didn't load
-} catch (_) {
-  db = makeMockDb();
-  localMode = true;
-}
+// The sticker formats, from the API (/api/formats): the sticker switch, the
+// code field's mask and its checks all follow them. Reporting waits for them.
+let FORMATS = [];
+const formatFor = operator => FORMATS.find(f => f.operator === operator);
 
-// --- login gate: search & report require a signed-in aero user.
-// The tables are read_access:'authed', so this is enforced server-side too —
-// an anonymous visitor's read gets 401 and the map shows the sign-in sheet.
-let whoKind = null; // 'user' | 'guest' | null = not yet resolved
-async function ensureWho() {
-  if (whoKind === null) {
-    try { whoKind = (await db.whoami()).kind; } catch (_) { whoKind = 'guest'; }
-  }
-  return whoKind;
+// --- sign-in gate: reading and reporting need a sign-in with Aero. The API
+// enforces it too: a read without one gets 401 and the map shows the sheet.
+// Aero sends the browser back to /auth/aero, handled in <head>.
+function signIn() {
+  const state = crypto.randomUUID();
+  writeStore(sessionStorage, SIGN_IN_STATE_KEY, state);
+  location.assign('/api/sign-in?state=' + state);
 }
-async function requireLogin() {
-  if (localMode) return true; // preview mode: nothing to sign in to
-  if (await ensureWho() === 'user') return true;
-  toast('Sign in with your aero account to continue…');
-  setTimeout(goToLogin, 800);
+function requireLogin() {
+  if (signedIn()) return true;
+  toast('Sign in with your Aero account to continue…');
+  setTimeout(signIn, 800);
   return false;
 }
-const scansTable = () => db.table('qr_scans');
-const locationsTable = () => db.table('qr_locations');
 
 /* ============================================================
    Section 3 — Math & validation utils
@@ -638,13 +738,36 @@ function median(nums) {
   const mid = Math.floor(s.length / 2);
   return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
 }
-function normalizeCode(raw) {
-  let v = (raw || '').trim().toUpperCase();
-  // Accept a missing dash ("ABC1234") and codes embedded in URLs/QR payloads.
-  const m = v.match(CODE_ANYWHERE_RE);
-  if (!m) return null;
-  v = m[0].includes('-') ? m[0] : m[0].slice(0, 3) + '-' + m[0].slice(3);
-  return CODE_RE.test(v) ? v : null;
+// A sticker's code is letters, a dash, then letters or digits, in lengths its
+// format sets: LTA's ABC-1234, HelloRide's GRAB-001.
+const tailClass = f => f.tailDigitsOnly ? '[0-9]' : '[0-9A-Z]';
+function codeFits(code, f) {
+  return new RegExp(`^[A-Z]{${f.head}}-${tailClass(f)}{${f.tail}}$`).test(code);
+}
+// The input mask: upper case, letters and digits only, and the dash where
+// this sticker's format puts it, so nobody types it.
+function maskCode(raw, f) {
+  const clean = (raw || '').toUpperCase().replace(/[^0-9A-Z]/g, '').slice(0, f.head + f.tail);
+  return clean.length > f.head ? clean.slice(0, f.head) + '-' + clean.slice(f.head) : clean;
+}
+// What a scanned QR code says about its sticker: { format, code } when it
+// holds a code; { format, code: null } when it names an operator but holds
+// no code we can read, so the printed one has to be typed; otherwise null.
+// An operator's code counts only with its dash, since without one it reads
+// as an LTA code too (GRAB001 is also GRA-B001).
+function readSticker(raw) {
+  const text = (raw || '').toUpperCase();
+  const own = FORMATS.filter(f => f.operator !== 'lta');
+  for (const f of own) {
+    const m = text.match(new RegExp(`\\b[A-Z]{${f.head}}-${tailClass(f)}{${f.tail}}\\b`));
+    if (m) return { format: f, code: m[0] };
+  }
+  const named = own.find(f => text.includes(f.label.toUpperCase()));
+  if (named) return { format: named, code: null };
+  // LTA's QR codes may be a URL containing the code, with or without its dash.
+  const lta = formatFor('lta');
+  const m = lta && text.match(new RegExp(`[A-Z]{${lta.head}}-?${tailClass(lta)}{${lta.tail}}`));
+  return m ? { format: lta, code: maskCode(m[0], lta) } : null;
 }
 function inSingapore(lat, lng) {
   return lat >= SG_BBOX.minLat && lat <= SG_BBOX.maxLat &&
@@ -666,46 +789,29 @@ function esc(s) {
 /* ============================================================
    Section 4 — Data layer
    ============================================================ */
+// Which operator the rider is on: 'any', or one whose own stickers show
+// alongside LTA's (and nobody else's). Remembered on the device.
+let riding = readStore(localStorage, RIDING_KEY);
+if (!(riding in OPERATORS)) riding = 'any';
+
+// Pins within the radius, nearest first, each with its distanceMeters.
 async function fetchNearby(lat, lng, radiusMeters) {
-  return locationsTable().list({
-    near: { lat, lng, radiusMeters: Math.min(Math.max(radiusMeters, MIN_RADIUS_M), MAX_RADIUS_M) },
-    limit: NEAR_LIMIT,
-  });
+  return db.near(lat, lng, Math.min(Math.max(radiusMeters, MIN_RADIUS_M), MAX_RADIUS_M), riding);
 }
 
-// Recompute the component-wise median over every raw scan of this code and
-// upsert the shared per-code row (row id = the code itself; PUT-on-missing
-// creates it for anyone because qr_locations is write:'any').
-async function recomputeAndUpsertLocation(code) {
-  const rows = [];
-  let offset = 0;
-  for (;;) {
-    const page = await scansTable().list({ eq: { code }, limit: 200, offset });
-    rows.push(...page);
-    offset += 200;
-    if (page.length < 200 || offset > 10000) break;
-  }
-  const loc = {
-    code,
-    lat: median(rows.map(r => r.data.lat)),
-    lng: median(rows.map(r => r.data.lng)),
-    numReports: rows.length,
-    lastReportAt: Date.now(),
-  };
-  await locationsTable().set(code, loc);
-  return loc;
-}
-
-async function submitScan(code, pos, source) {
-  await scansTable().add({
+// The API files the report and moves the code's pin to the median of all its
+// reports, then answers with the pin as it now stands. `raw` is what a
+// scanned QR code said, kept so new kinds of sticker can be learned from it.
+async function submitScan(code, pos, source, raw) {
+  return db.report({
     code,
     lat: pos.lat,
     lng: pos.lng,
     accuracy: pos.accuracy,
     source,
+    ...(raw ? { raw } : {}),
     clientTimestamp: Date.now(),
   });
-  return recomputeAndUpsertLocation(code);
 }
 
 /* ============================================================
@@ -749,12 +855,27 @@ const PIN_PAD = 6;           // border + arrow tail below the anchor, px
 
 let userMarker = null, userAccCircle = null;
 
+// Whose sticker it is decides whose rides can end there.
+function operatorLine(data) {
+  const op = OPERATORS[data.operator];
+  if (!op) return '<div class="popupOp">LTA sticker &middot; any operator can end a ride here</div>';
+  return `<div class="popupOp only"><strong>${esc(op.name)} only</strong> &mdash; other operators can&rsquo;t end a ride here</div>`;
+}
+
+// The code as a pin or list row shows it: an operator's own sticker gets its badge.
+function codeLabel(code) {
+  const e = codeStore.get(code);
+  const op = e && OPERATORS[e.data.operator];
+  return (op ? `<span class="pinOp">${op.badge}</span>` : '') + esc(code);
+}
+
 function popupHtml(code, data, distanceMeters) {
   const dist = distanceMeters != null && isFinite(distanceMeters)
     ? Math.round(distanceMeters) + ' m away · ' : '';
   return `
     <div class="popupCode">${esc(code)}</div>
     <div class="popupMeta">${dist}${data.numReports} report${data.numReports === 1 ? '' : 's'} · ${timeAgo(data.lastReportAt)}</div>
+    ${operatorLine(data)}
     <div class="popupLinks">
       <button type="button" class="copyBtn" onclick='copyCode(${JSON.stringify(code)}, this)'>Copy code</button>
     </div>`;
@@ -777,7 +898,7 @@ function listPopupHtml(codes) {
     const e = codeStore.get(code);
     const n = e ? e.data.numReports : 0;
     return `<button type="button" class="popupListRow" onclick='event.stopPropagation(); openCodePopup(${JSON.stringify(code)})'>
-      <span class="popupListCode">${esc(code)}</span>
+      <span class="popupListCode">${codeLabel(code)}</span>
       <span class="popupListMeta">${n} report${n === 1 ? '' : 's'}</span>
     </button>`;
   }).join('') + '</div>';
@@ -796,7 +917,8 @@ function openCodePopup(code, latlng) {
 // which is why grouping tests boxes rather than distance between anchors.
 function pinBox(g) {
   const rows = Math.min(g.codes.length, STACK_MAX) + (g.codes.length > STACK_MAX ? 1 : 0);
-  const w = Math.max(...g.codes.map(c => c.length)) * PIN_CH_W + 18;
+  const badged = c => OPERATORS[codeStore.get(c)?.data.operator] ? 3 : 0; // the badge is about 3 characters wide
+  const w = Math.max(...g.codes.map(c => c.length + badged(c))) * PIN_CH_W + 18;
   return {
     l: g.pt.x - w / 2, r: g.pt.x + w / 2,
     t: g.pt.y - rows * PIN_ROW_H - PIN_PAD, b: g.pt.y + PIN_PAD,
@@ -842,7 +964,7 @@ function pinHtml(codes) {
   const shown = codes.slice(0, STACK_MAX);
   const extra = codes.length - shown.length;
   const rows = shown.map(c =>
-    `<button type="button" class="pinRow" data-code="${esc(c)}">${esc(c)}</button>`).join('');
+    `<button type="button" class="pinRow" data-code="${esc(c)}">${codeLabel(c)}</button>`).join('');
   const more = extra ? `<button type="button" class="pinRow pinMore" data-more="1">+${extra} more</button>` : '';
   return `<div class="codePin">${rows}${more}</div>`;
 }
@@ -871,8 +993,8 @@ function upsertMarker(code, data, distanceMeters) {
 function renderRows(rows) {
   const seen = new Set();
   for (const r of rows) {
-    codeStore.set(r.data.code, { data: r.data, distanceMeters: r._distanceMeters });
-    seen.add(r.data.code);
+    codeStore.set(r.code, { data: r, distanceMeters: r.distanceMeters });
+    seen.add(r.code);
   }
   // Drop codes that fell out of the current query's radius/limit.
   for (const code of codeStore.keys()) {
@@ -898,38 +1020,13 @@ let refreshTimer = null, refreshing = false, lastFetchedView = null;
 // we halt fires into a no-op and needs no cancelling.
 let dataHalted = false;
 
-// The server rejects reads once the project's daily Firestore quota is gone.
-// It resets on its own schedule, so retrying on every pan just burns quota we
-// no longer have; halt and let the user decide when to try again.
-function isQuotaRejection(e) {
-  const b = e && e.body;
-  return !!b && b.error === 'rejected' && /quota/i.test(b.reason || '');
-}
-
-function isAuthRejection(e) {
-  return !!e && (e.status === 401 || e.status === 403);
-}
-
-// Anonymous visitors can't read the tables at all, so retrying on every pan
-// just burns quota on 401s. Halt and point them at the login page.
+// Visitors who aren't signed in can't read codes at all, so asking on every
+// pan only collects 401s. Halt and point them at signing in. The banner
+// stays after the sheet is dismissed, so the map is never a dead end.
 function haltForLogin() {
   dataHalted = true;
-  showBanner('Sign in to see parking codes near you.', 'Sign in', goToLogin);
+  showBanner('Sign in to see parking codes near you.', 'Sign in', signIn);
   openLoginSheet();
-}
-
-function haltForQuota() {
-  dataHalted = true;
-  // Banner persists after the sheet is dismissed, so the map is never a dead end.
-  showBanner('Daily database quota reached — codes can’t load right now.', 'Try again', resumeAfterQuota);
-  openQuotaSheet();
-}
-
-function resumeAfterQuota() {
-  closeQuotaSheet();
-  hideBanner();
-  dataHalted = false;
-  refreshNow();
 }
 
 // Fetch once the map has settled: every move restarts the timer, so a run of
@@ -942,6 +1039,7 @@ function scheduleRefresh() {
 
 async function refreshNearby() {
   if (dataHalted) return;
+  if (!signedIn()) { haltForLogin(); return; }     // no point asking: the API would say 401
   if (refreshing) { scheduleRefresh(); return; }   // retry once the in-flight one lands
   const view = viewKey();
   if (view === lastFetchedView) return;            // map hasn't moved — nothing new to ask for
@@ -951,15 +1049,8 @@ async function refreshNearby() {
     renderRows(await fetchNearby(c.lat, c.lng, viewportRadiusM()));
     lastFetchedView = view;                        // only on success, so failures retry
   } catch (e) {
-    if (isQuotaRejection(e)) {
-      haltForQuota();
-    } else if (isAuthRejection(e)) {
-      haltForLogin();
-    } else if (e.status === 400 && e.body && e.body.error === 'geo_not_enabled') {
-      showBanner('Database not set up yet (geo flag missing on qr_locations).', '', null);
-    } else {
-      console.warn('refreshNearby failed:', e);
-    }
+    if (e.status === 401) haltForLogin(); // the sign-in ran out or was refused; it's forgotten already
+    else console.warn('refreshNearby failed:', e);
   } finally {
     refreshing = false;
   }
@@ -1045,9 +1136,8 @@ function closeSearch() {
   searchResults.style.display = 'none';
   searchInput.blur();
 }
-searchInput.addEventListener('focus', async () => {
-  if (localMode) return;
-  if (await ensureWho() !== 'user') {
+searchInput.addEventListener('focus', () => {
+  if (!signedIn()) {
     searchInput.blur();
     requireLogin();
   }
@@ -1084,6 +1174,31 @@ const ZOOM_STEPS = [1, 2, 5]; // offered only where the track reports that range
 
 let cameraStream = null, scanTimer = null, gpsWatchId = null, lastFix = null;
 let codeSource = 'manual'; // flipped to 'scan' when the detector fills the field
+let scannedRaw = null;     // what the last scanned QR code said, sent with the report
+let currentFormat = null;  // the sticker switch's choice; kept between reports
+
+// One button per sticker format, LTA's first. The choice sets the code
+// field's placeholder, mask and checks.
+const stickerSwitch = document.getElementById('stickerSwitch');
+function buildStickerSwitch() {
+  stickerSwitch.innerHTML = FORMATS.map(f =>
+    `<button type="button" role="radio" data-operator="${esc(f.operator)}" aria-checked="false">
+      <strong>${esc(f.label)}</strong><span>${esc(f.scope)}</span>
+    </button>`).join('');
+  stickerSwitch.querySelectorAll('button').forEach(b =>
+    b.addEventListener('click', () => setFormat(formatFor(b.dataset.operator))));
+  setFormat(currentFormat || FORMATS[0]);
+}
+function setFormat(f) {
+  if (!f) return;
+  currentFormat = f;
+  stickerSwitch.querySelectorAll('button').forEach(b =>
+    b.setAttribute('aria-checked', String(b.dataset.operator === f.operator)));
+  codeInput.placeholder = f.example;
+  codeInput.maxLength = f.head + f.tail + 1;
+  codeInput.value = maskCode(codeInput.value, f);
+  validateCodeField();
+}
 // Remembered for the session so re-opening the sheet keeps the lens you picked.
 // Either { zoom: 2 } (Android-style track zoom) or { deviceId } (iOS-style separate lenses).
 let lensChoice = null;
@@ -1179,15 +1294,22 @@ async function startCamera() {
     try {
       const found = await detector.detect(video);
       for (const b of found) {
-        const code = normalizeCode(b.rawValue);
-        if (code) {
-          codeInput.value = code; // populate, don't submit — user confirms
+        const sticker = readSticker(b.rawValue);
+        if (!sticker) continue;
+        scannedRaw = b.rawValue;
+        stopCamera();
+        setFormat(sticker.format);
+        if (sticker.code) {
+          codeInput.value = sticker.code; // populate, don't submit — user confirms
           codeSource = 'scan';
           validateCodeField();
-          stopCamera();
           toast('Code detected — check it and submit.');
-          return;
+        } else {
+          // An operator's QR code that doesn't spell out the sticker's code.
+          codeInput.focus();
+          toast(`${sticker.format.label} sticker — type the code printed under the QR.`);
         }
+        return;
       }
     } catch (_) { /* transient detect failures are fine */ }
   }, 400);
@@ -1230,32 +1352,41 @@ function fixIsSubmittable() {
   return lastFix && lastFix.accuracy <= MAX_ACCURACY_M && inSingapore(lastFix.lat, lastFix.lng);
 }
 
+// Whether what's typed so far can still become a code of this format.
+function prefixFits(code, f) {
+  const [head, tail = ''] = code.split('-');
+  return /^[A-Z]*$/.test(head) && new RegExp(`^${tailClass(f)}*$`).test(tail);
+}
+// The code if it fits the chosen sticker's format, else null. A partly typed
+// code isn't wrong until a character can't belong or the code is complete.
 function validateCodeField() {
-  const raw = codeInput.value.trim();
-  const code = normalizeCode(raw);
-  if (raw && !code) {
+  const f = currentFormat;
+  const code = codeInput.value.trim();
+  const ok = !!f && codeFits(code, f);
+  if (f && code && !ok && (!prefixFits(code, f) || code.length >= f.head + f.tail + 1)) {
     codeInput.classList.add('bad');
-    codeError.textContent = 'Format: 3 letters + 4 characters — e.g. ABC-1234';
+    codeError.textContent = `${f.label} codes are ${f.hint} — e.g. ${f.example}`;
   } else {
     codeInput.classList.remove('bad');
     codeError.textContent = '';
   }
-  submitBtn.disabled = !(code && fixIsSubmittable());
-  return code;
+  submitBtn.disabled = !(ok && fixIsSubmittable());
+  return ok ? code : null;
 }
 codeInput.addEventListener('input', () => {
   // Input mask: uppercase and auto-insert the dash — the user never types it.
-  const clean = codeInput.value.toUpperCase().replace(/[^0-9A-Z]/g, '').slice(0, 7);
-  codeInput.value = clean.length > 3 ? clean.slice(0, 3) + '-' + clean.slice(3) : clean;
+  if (currentFormat) codeInput.value = maskCode(codeInput.value, currentFormat);
   codeSource = 'manual';
   validateCodeField();
 });
 
 function openSheet() {
+  if (!FORMATS.length) { toast('Still loading — try again in a moment.'); return; }
   sheet.classList.add('open');
   backdrop.classList.add('open');
   lastFix = null;
   codeSource = 'manual';
+  scannedRaw = null;
   gpsDot.className = '';
   gpsText.textContent = 'Waiting for GPS…';
   startGpsWatch();
@@ -1269,12 +1400,8 @@ function closeSheet() {
   stopGpsWatch();
 }
 
-// Preserve the map view across the login round-trip: saveLastView() already
-// runs on every moveend, so /login?next= brings them back to the same place.
-function goToLogin() {
-  location.href = '/login?next=' + encodeURIComponent(location.pathname);
-}
-
+// The map view survives the sign-in round trip: saveLastView() already runs
+// on every moveend, and the page reopens there.
 const loginSheet = document.getElementById('loginSheet');
 function openLoginSheet() {
   closeSheet();
@@ -1285,27 +1412,13 @@ function closeLoginSheet() {
   loginSheet.classList.remove('open');
   backdrop.classList.remove('open');
 }
-document.getElementById('loginBtn').addEventListener('click', goToLogin);
+document.getElementById('loginBtn').addEventListener('click', signIn);
 
-const quotaSheet = document.getElementById('quotaSheet');
-function openQuotaSheet() {
-  closeSheet(); // only one sheet at a time
-  closeLoginSheet();
-  quotaSheet.classList.add('open');
-  backdrop.classList.add('open');
-}
-function closeQuotaSheet() {
-  quotaSheet.classList.remove('open');
-  backdrop.classList.remove('open');
-}
-document.getElementById('quotaRetryBtn').addEventListener('click', resumeAfterQuota);
-
-document.getElementById('reportFab').addEventListener('click', async () => {
-  if (await requireLogin()) openSheet();
+document.getElementById('reportFab').addEventListener('click', () => {
+  if (requireLogin()) openSheet();
 });
 backdrop.addEventListener('click', () => {
-  if (quotaSheet.classList.contains('open')) closeQuotaSheet();
-  else if (loginSheet.classList.contains('open')) closeLoginSheet();
+  if (loginSheet.classList.contains('open')) closeLoginSheet();
   else closeSheet();
 });
 
@@ -1316,8 +1429,8 @@ submitBtn.addEventListener('click', async () => {
   submitBtn.disabled = true;
   submitBtn.textContent = 'Submitting…';
   try {
-    const loc = await submitScan(code, lastFix, source);
-    upsertMarker(code, loc, haversineM(lastFix.lat, lastFix.lng, loc.lat, loc.lng));
+    const loc = await submitScan(code, lastFix, source, scannedRaw);
+    upsertMarker(loc.code, loc, haversineM(lastFix.lat, lastFix.lng, loc.lat, loc.lng));
     closeSheet();
     codeInput.value = '';
     toast(localMode
@@ -1325,8 +1438,10 @@ submitBtn.addEventListener('click', async () => {
       : 'Thanks — code reported!');
     map.setView([loc.lat, loc.lng], Math.max(map.getZoom(), 17));
   } catch (e) {
-    if (e.status === 401 || e.status === 403) {
-      toast('Reporting is not open yet — tables need to be configured.');
+    if (e.status === 401) {
+      closeSheet();
+      haltForLogin();
+      toast('Your sign-in ran out — sign in again to report.');
     } else {
       toast('Submit failed: ' + (e.message || 'unknown error'));
     }
@@ -1380,12 +1495,34 @@ function locateAndCenter(showErrors) {
 
 document.getElementById('locateBtn').addEventListener('click', () => locateAndCenter(true));
 
+// --- "Riding with": an operator's own stickers show only to its riders
+const ridingBar = document.getElementById('ridingBar');
+function showRiding() {
+  ridingBar.querySelectorAll('button').forEach(b =>
+    b.setAttribute('aria-checked', String(b.dataset.riding === riding)));
+}
+ridingBar.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+  if (b.dataset.riding === riding) return;
+  riding = b.dataset.riding;
+  writeStore(localStorage, RIDING_KEY, riding === 'any' ? null : riding);
+  showRiding();
+  lastFetchedView = null; // the same view, but a different set of stickers
+  refreshNow();
+}));
+showRiding();
+
 // --- init ---
 if (localMode) {
-  showBanner('Local preview mode — data won’t be saved. Publish on aero to go live.', '', null);
-} else {
-  ensureWho(); // resolve the visitor's kind early so the first gated tap is instant
+  showBanner('Local preview — sample data, nothing is saved.', '', null);
 }
+// How the sign-in in <head> went, if this load is its return.
+if (signInResult === 'ok') toast('Signed in — welcome!');
+else if (signInResult === 'cancelled') toast('Sign-in cancelled.');
+else if (signInResult === 'failed') toast('Sign-in didn’t complete — try again.');
+
+db.formats()
+  .then(formats => { FORMATS = formats; buildStickerSwitch(); })
+  .catch(e => console.warn('loading sticker formats failed:', e));
 locateAndCenter(true);
 // Fallback only: geolocation answering (or failing) calls refreshNow(), which
 // clears this timer. It fires solely when the fix is still pending at the deadline.
