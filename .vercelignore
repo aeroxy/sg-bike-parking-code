@@ -1,4 +1,4 @@
-# Vercel builds the function from api/ and src/, and serves public/ as it is.
+# Vercel builds the function from api/ and src/, makes public/paynow.png with
+# scripts/paynow-qr.mjs, and serves public/.
 aero-app/
-scripts/
 tests/

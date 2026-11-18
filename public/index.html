@@ -204,7 +204,7 @@ input  { font: inherit; }
   transition: opacity .25s var(--ease);
 }
 #sheetBackdrop.open { opacity: 1; pointer-events: auto; }
-#reportSheet, #loginSheet {
+#reportSheet, #loginSheet, #chipSheet {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 1600;
   background: var(--surface);
   border-radius: var(--r-xl) var(--r-xl) 0 0;
@@ -215,7 +215,7 @@ input  { font: inherit; }
   max-height: 88vh;
   overflow-y: auto;
 }
-#reportSheet.open, #loginSheet.open { transform: translateY(0); }
+#reportSheet.open, #loginSheet.open, #chipSheet.open { transform: translateY(0); }
 .sheetHandle {
   width: 40px; height: 4px; border-radius: 2px;
   background: var(--border-strong); margin: 6px auto 16px;
@@ -224,11 +224,38 @@ input  { font: inherit; }
   font-family: var(--mono); font-size: 11px; font-weight: 500;
   letter-spacing: .14em; text-transform: uppercase; color: var(--fg-3);
 }
-#reportSheet h2, #loginSheet h2 {
+#reportSheet h2, #loginSheet h2, #chipSheet h2 {
   font-size: 26px; line-height: .95; letter-spacing: -.04em; font-weight: 800;
   margin: 6px 0 6px;
 }
-#reportSheet .sub, #loginSheet .sub { color: var(--fg-2); font-size: 13.5px; margin-bottom: 18px; }
+#reportSheet .sub, #loginSheet .sub, #chipSheet .sub { color: var(--fg-2); font-size: 13.5px; margin-bottom: 18px; }
+
+/* Chip-in sheet: a PayNow QR any Singapore bank app can scan */
+#payQrCard {
+  width: min(260px, 72vw); margin: 0 auto 14px;
+  padding: 12px 12px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+#payQr { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+#payQrCard .payLabel {
+  font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--fg-2); margin-top: 6px;
+}
+.payActions { display: flex; gap: 8px; margin-bottom: 12px; }
+.payActions button {
+  flex: 1; padding: 12px;
+  border-radius: var(--r-md);
+  background: var(--action-soft); border: 1px solid var(--action-300); color: var(--action-700);
+  font-size: 14px; font-weight: 600;
+  transition: background .15s var(--ease);
+}
+.payActions button:hover { background: #FBE9E1; }
+.payHint { font-size: 12.5px; color: var(--fg-3); text-align: center; line-height: 1.5; margin: 0 0 14px; }
+#payNote { font-size: 12.5px; color: var(--fg-3); text-align: center; line-height: 1.5; }
+#payNote a { color: var(--action); font-weight: 600; text-decoration: none; }
 
 /* Sign-in sheet */
 #loginBtn {
@@ -503,8 +530,8 @@ input  { font: inherit; }
   font-size: 12px; color: var(--fg-3);
   text-align: center;
 }
-#chipIn a { color: var(--action); font-weight: 600; text-decoration: none; margin-left: 4px; }
-#chipIn a:hover { color: var(--action-700); text-decoration: underline; }
+#chipIn button { color: var(--action); font-weight: 600; font-size: inherit; margin-left: 4px; padding: 0; }
+#chipIn button:hover { color: var(--action-700); text-decoration: underline; }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
@@ -583,7 +610,26 @@ input  { font: inherit; }
   <div id="loginNote">Your map view is kept when you come back</div>
 </div>
 
-<footer id="chipIn">Free and crowd-sourced. If it saves you a walk, <a href="https://aero-sg.us.to" target="_blank" rel="noopener">chip in</a></footer>
+<div id="chipSheet" role="dialog" aria-label="Chip in" aria-modal="true">
+  <div class="sheetHandle"></div>
+  <div class="eyebrow">Chip in</div>
+  <h2>Keep the map free</h2>
+  <p class="sub">SG Bike QR has no ads and runs on donations.</p>
+
+  <div id="payBlock" hidden>
+    <div id="payQrCard">
+      <img id="payQr" width="328" height="328" alt="PayNow QR code">
+      <div class="payLabel">PayNow</div>
+    </div>
+    <div class="payActions">
+      <button type="button" id="paySaveBtn">Save QR</button>
+    </div>
+    <p class="payHint">Scan with your bank app and PayNow any amount. On this phone? Save the QR, then open it from your bank app&rsquo;s scanner.</p>
+  </div>
+  <div id="payNote">No PayNow? <a href="https://aero-sg.us.to" target="_blank" rel="noopener">Chip in by card</a></div>
+</div>
+
+<footer id="chipIn">Free and crowd-sourced. If it saves you a walk, <button type="button" id="chipInBtn">chip in</button></footer>
 
 <div id="toasts"></div>
 
@@ -1414,11 +1460,48 @@ function closeLoginSheet() {
 }
 document.getElementById('loginBtn').addEventListener('click', signIn);
 
+// --- Chip in: PayNow to the maintainer, or by card on the donate page. The
+// QR is made at build time from the deployment's environment (see
+// scripts/paynow-qr.mjs), which keeps the number out of this public repository
+// and off the screen. Until it loads, or where it wasn't made (or on sample
+// data), the sheet offers the card link alone.
+const PAYNOW_QR = '/paynow.png';
+const chipSheet = document.getElementById('chipSheet');
+const payQr = document.getElementById('payQr');
+payQr.addEventListener('load', () => { document.getElementById('payBlock').hidden = false; });
+function openChipSheet() {
+  closeSheet();
+  closeLoginSheet();
+  chipSheet.classList.add('open');
+  backdrop.classList.add('open');
+  if (!payQr.getAttribute('src') && !localMode) payQr.src = PAYNOW_QR;
+}
+function closeChipSheet() {
+  chipSheet.classList.remove('open');
+  backdrop.classList.remove('open');
+}
+document.getElementById('chipInBtn').addEventListener('click', openChipSheet);
+// A bank app on the same phone can only read the QR from a saved image: share
+// it to Photos where the browser can, else download it.
+document.getElementById('paySaveBtn').addEventListener('click', async () => {
+  const blob = await fetch(PAYNOW_QR).then(r => r.blob());
+  const file = new File([blob], 'paynow-qr.png', { type: 'image/png' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file] }); return; } catch (e) { if (e.name === 'AbortError') return; }
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = file.name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+
 document.getElementById('reportFab').addEventListener('click', () => {
   if (requireLogin()) openSheet();
 });
 backdrop.addEventListener('click', () => {
-  if (loginSheet.classList.contains('open')) closeLoginSheet();
+  if (chipSheet.classList.contains('open')) closeChipSheet();
+  else if (loginSheet.classList.contains('open')) closeLoginSheet();
   else closeSheet();
 });
 

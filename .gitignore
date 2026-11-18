@@ -2,3 +2,6 @@
 .DS_Store
 .env
 /target
+/node_modules
+# Made at build time from PAYNOW_NUMBER, which stays out of this repository.
+/public/paynow.png

@@ -1,5 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "bun install --frozen-lockfile",
+  "buildCommand": "bun scripts/paynow-qr.mjs",
   "outputDirectory": "public",
   "regions": ["sin1"],
   "rewrites": [
