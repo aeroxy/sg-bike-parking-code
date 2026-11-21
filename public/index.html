@@ -546,13 +546,20 @@ input  { font: inherit; }
 }
 #threadPanel[hidden], #threadFoot[hidden] { display: none; }
 @media (min-width: 768px) {
+  /* Level with the search bar, and down to 12 px above the locate button
+     (46 px tall, 88 px up), so it and the report button stay in reach */
   #threadPanel {
-    inset: 16px 16px auto auto;
-    width: 400px; max-height: calc(100dvh - 32px);
+    top: calc(env(safe-area-inset-top, 0px) + 12px); right: 16px; bottom: auto; left: auto;
+    width: 400px;
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - 12px - var(--bottom) - 146px);
     padding-top: 0;
     border: 1px solid var(--border); border-radius: var(--r-xl);
     box-shadow: var(--shadow-lg);
   }
+  /* The search bar and the banner make room beside an open thread: the
+     panel's 400 px, its 16 px margin and a 12 px gap */
+  body:has(#threadPanel:not([hidden])) #searchWrap,
+  body:has(#threadPanel:not([hidden])) #banner { right: 428px; }
 }
 .threadHead {
   flex: none; display: flex; align-items: center; gap: 12px;
