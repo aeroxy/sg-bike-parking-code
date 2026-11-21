@@ -533,6 +533,98 @@ input  { font: inherit; }
 #chipIn button { color: var(--action); font-weight: 600; font-size: inherit; margin-left: 4px; padding: 0; }
 #chipIn button:hover { color: var(--action-700); text-decoration: underline; }
 
+/* ============================================================
+   Champt threads, read here as Champt shows them: the whole
+   screen on phones, a side panel on wide screens
+   ============================================================ */
+#threadPanel {
+  position: fixed; inset: 0; z-index: 1100;
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--surface);
+  padding-top: env(safe-area-inset-top, 0px);
+  font-size: 14px; line-height: 1.5;
+}
+#threadPanel[hidden], #threadFoot[hidden] { display: none; }
+@media (min-width: 768px) {
+  #threadPanel {
+    inset: 16px 16px auto auto;
+    width: 400px; max-height: calc(100dvh - 32px);
+    padding-top: 0;
+    border: 1px solid var(--border); border-radius: var(--r-xl);
+    box-shadow: var(--shadow-lg);
+  }
+}
+.threadHead {
+  flex: none; display: flex; align-items: center; gap: 12px;
+  min-height: 56px; padding: 0 12px 0 20px;
+  border-bottom: 1px solid var(--border);
+}
+#threadLabel { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
+#threadLabel .eyebrow { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#threadClose {
+  flex: none; width: 40px; height: 40px; border-radius: var(--r-md);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--fg-2);
+  transition: background .2s var(--ease), color .2s var(--ease);
+}
+#threadClose:hover { background: var(--muted); color: var(--fg); }
+/* Something true: blue, with a live dot */
+.liveChip {
+  flex: none; display: inline-flex; align-items: center; gap: 6px;
+  padding: 2px 10px; border-radius: 999px;
+  border: 1px solid var(--status-300); background: var(--status-soft); color: var(--status-700);
+  font-size: 11px; font-weight: 500; font-variant-numeric: tabular-nums;
+}
+.liveChip::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--status); box-shadow: 0 0 0 3px rgba(46,107,230,.16);
+}
+#threadBody { flex: 1; min-height: 0; overflow-y: auto; }
+.threadState { padding: 40px 20px; text-align: center; }
+.threadState strong { display: block; font-size: 18px; font-weight: 700; }
+.threadState span { display: block; margin-top: 4px; font-size: 13px; color: var(--fg-2); }
+.threadPick {
+  display: block; width: 100%; text-align: left;
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  transition: background .2s var(--ease);
+}
+.threadPick:last-child { border-bottom: none; }
+.threadPick:hover { background: var(--sunken); }
+.threadPreview {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+  color: var(--fg);
+}
+.threadPick .eyebrow { display: block; margin-top: 6px; font-variant-numeric: tabular-nums; }
+.threadMessages { list-style: none; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+.threadWho { display: flex; align-items: baseline; gap: 8px; }
+.threadWho img {
+  align-self: center; flex: none; width: 20px; height: 20px;
+  border-radius: 50%; background: var(--muted); object-fit: cover;
+}
+.threadWho strong { min-width: 0; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.threadWho time { flex: none; margin-left: auto; font-size: 10px; font-variant-numeric: tabular-nums; }
+.threadText { margin-top: 4px; color: var(--fg-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+/* A fixed height, so the thread doesn't shift as a photo loads */
+.threadMedia {
+  display: block; width: 100%; height: 224px; margin-top: 8px;
+  border: 1px solid var(--border); border-radius: var(--r-md);
+  background: var(--sunken); object-fit: contain;
+}
+p.threadMedia { display: grid; place-items: center; font-size: 12px; color: var(--fg-3); }
+#threadFoot {
+  flex: none; display: flex; align-items: center; gap: 12px;
+  padding: 16px 20px calc(env(safe-area-inset-bottom, 0px) + 16px);
+  border-top: 1px solid var(--border); background: var(--sunken);
+}
+#threadFoot p { flex: 1; min-width: 0; font-size: 13px; color: var(--fg-2); }
+#threadFoot a {
+  flex: none; display: inline-flex; align-items: center; height: 40px; padding: 0 16px;
+  border-radius: var(--r-md); background: var(--ink); color: #fff; box-shadow: var(--shadow-sm);
+  font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap;
+  transition: background .2s var(--ease);
+}
+#threadFoot a:hover { background: var(--ink-700); }
+
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
@@ -629,6 +721,17 @@ input  { font: inherit; }
   <div id="payNote">No PayNow? <a href="https://aero-sg.us.to" target="_blank" rel="noopener">Chip in by card</a></div>
 </div>
 
+<aside id="threadPanel" aria-label="Champt thread" hidden>
+  <div class="threadHead">
+    <div id="threadLabel"></div>
+    <button type="button" id="threadClose" aria-label="Close" title="Close (Esc)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <div id="threadBody"></div>
+  <div id="threadFoot" hidden></div>
+</aside>
+
 <footer id="chipIn">Free and crowd-sourced. If it saves you a walk, <button type="button" id="chipInBtn">chip in</button></footer>
 
 <div id="toasts"></div>
@@ -660,13 +763,18 @@ const OPERATORS = {
   helloride: { name: 'HelloRide', badge: 'HR' },
   anywheel: { name: 'Anywheel', badge: 'AW' },
 };
+// Champt (https://github.com/aeroxy/champt): chat threads pinned to places.
+// The map shows them for reading; replying happens on Champt. Its API
+// answers this page because Champt's ALLOWED_ORIGINS lists this site.
+const CHAMPT = 'https://champt.vercel.app';
 
 /* ============================================================
    Section 2 — Data access: the API when served, sample data from disk
    ============================================================ */
 // Opened straight from disk there is no API, so the page runs on built-in
-// sample data near Raffles Place through the same three calls: enough to
-// exercise the map, pins, popups, search, validation and the median maths.
+// sample data near Raffles Place through the same calls: enough to exercise
+// the map, pins, popups, search, validation, the median maths and Champt's
+// threads.
 const localMode = location.protocol === 'file:';
 
 // Storage can throw (private windows, blocked site data). Signing in then
@@ -702,11 +810,22 @@ async function api(path, body) {
   return data;
 }
 
+// Champt's reads need no sign-in, so nothing of this page's goes with them.
+async function champtApi(path, signal) {
+  const res = await fetch(CHAMPT + path, { signal });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new ApiError((data && data.error) || `Champt answered ${res.status}.`, res.status);
+  return data;
+}
+
 const remote = {
   formats: () => api('/api/formats'),
   near: (lat, lng, radiusMeters, riding) =>
     api(`/api/near?lat=${lat}&lng=${lng}&radius_m=${Math.round(radiusMeters)}&riding=${riding}`).then(r => r.codes),
   report: scan => api('/api/scans', scan),
+  // Champt's threads within west,south,east,north, and one with its messages.
+  threads: (bbox, signal) => champtApi(`/api/threads?bbox=${bbox}`, signal).then(r => r.threads),
+  thread: id => champtApi(`/api/threads/${id}`),
 };
 
 function makeMock() {
@@ -723,7 +842,37 @@ function makeMock() {
     { code: 'GRAB-001', operator: 'helloride', lat: 1.28150, lng: 103.86020, numReports: 1, lastReportAt: Date.now() - 5 * 86400e3 },
   ].map(p => [p.code, p]));
   const reports = new Map(); // code -> [{ lat, lng }]
+  // Champt's threads as its API gives them. Two share a spot, as threads
+  // often do: Champt pins them to a grid of about 100 m.
+  const at = minutes => new Date(Date.now() + minutes * 60e3).toISOString();
+  const message = (id, author_name, body, sent) =>
+    ({ id, author_name, avatar: null, body, media: null, created_at: at(sent) });
+  const threads = [
+    { id: 1, lat: 1.284, lng: 103.852, expires_at: at(24 * 60 - 3), messages: [
+      message(1, 'kopi_rider', 'Racks by Raffles Place MRT are full again. Anywhere else nearby?', -40),
+      message(2, 'tanjong_tom', 'Try behind One Raffles Quay, usually half empty before 9.', -25),
+      message(3, 'kopi_rider', 'Found it, thanks!', -3),
+    ] },
+    { id: 2, lat: 1.283, lng: 103.855, expires_at: at(9 * 60), messages: [
+      message(4, 'marina_mei', 'The bike path along Collyer Quay is closed for works this week.', -15 * 60),
+    ] },
+    { id: 3, lat: 1.283, lng: 103.855, expires_at: at(2 * 60), messages: [
+      message(5, 'tanjong_tom', 'Lost a blue water bottle near the Fullerton underpass. Shout if you see it!', -22 * 60),
+    ] },
+  ];
   return {
+    async threads(bbox) {
+      const [west, south, east, north] = bbox.split(',').map(Number);
+      return threads
+        .filter(t => t.lat >= south && t.lat <= north && t.lng >= west && t.lng <= east)
+        .map(t => ({ id: t.id, lat: t.lat, lng: t.lng, preview: t.messages[0].body,
+                     messages: t.messages.length, expires_at: t.expires_at }));
+    },
+    async thread(id) {
+      const found = threads.find(t => t.id === id);
+      if (!found) throw new ApiError('This thread is gone.', 404);
+      return found;
+    },
     async formats() { return formats; },
     async near(lat, lng, radiusMeters, riding) {
       return [...pins.values()]
@@ -825,6 +974,14 @@ function timeAgo(ts) {
   if (s < 3600) return Math.round(s / 60) + ' min ago';
   if (s < 172800) return Math.round(s / 3600) + ' h ago';
   return Math.round(s / 86400) + ' days ago';
+}
+// "23h 04m left", "12m left", "<1m left": a Champt thread's countdown.
+function timeLeft(expiresAt) {
+  const ms = Date.parse(expiresAt) - Date.now();
+  if (ms <= 0) return 'Expired';
+  const minutes = Math.floor(ms / 60e3), hours = Math.floor(minutes / 60);
+  if (minutes < 1) return '<1m left';
+  return hours ? `${hours}h ${String(minutes % 60).padStart(2, '0')}m left` : `${minutes}m left`;
 }
 function esc(s) {
   return String(s).replace(/[&<>"']/g, c => ({
@@ -1125,6 +1282,153 @@ function showUserDot(lat, lng, accuracy) {
     userMarker.setLatLng([lat, lng]);
     userAccCircle.setLatLng([lat, lng]).setRadius(accuracy);
   }
+}
+
+// --- Champt threads: dots drawn as Champt draws them, fading as their 24
+// hours run down, and read in a panel like Champt's own. Anyone can read
+// them, signed in or not; replying happens on Champt.
+const ACTION = '#D85A30', INK = '#0B0B0B'; // Leaflet's paint can't read CSS variables
+const threadDots = L.layerGroup().addTo(map);
+const threadPanel = document.getElementById('threadPanel');
+const threadLabel = document.getElementById('threadLabel');
+const threadBody = document.getElementById('threadBody');
+const threadFoot = document.getElementById('threadFoot');
+let threadPins = [];       // the threads in view, as Champt lists them
+let shownThread = null;    // the id of the thread in the panel
+let threadsRequest = null; // the list request in flight, which the next one cancels
+
+// 5 px across the world, growing to 8 px at street level, as on Champt.
+const dotRadius = () => 5 + 3 * Math.min(1, Math.max(0, (map.getZoom() - 2) / 12));
+
+function renderThreadDots() {
+  threadDots.clearLayers();
+  const r = dotRadius();
+  // The open thread's dot goes last, so it draws on top.
+  const pins = [...threadPins].sort((a, b) => (a.id === shownThread) - (b.id === shownThread));
+  for (const p of pins) {
+    const open = p.id === shownThread;
+    const life = Math.min(1, Math.max(0, (Date.parse(p.expires_at) - Date.now()) / 864e5));
+    L.circleMarker([p.lat, p.lng], {
+      interactive: false, // threadsAt finds taps, with room for a fingertip
+      radius: open ? r + 3 : r,
+      color: open ? INK : '#fff', weight: open ? 3 : 2, opacity: 1,
+      fillColor: ACTION, fillOpacity: open ? 1 : 0.35 + 0.65 * life,
+    }).addTo(threadDots);
+  }
+}
+
+async function refreshThreads() {
+  if (threadsRequest) threadsRequest.abort();
+  const request = threadsRequest = new AbortController();
+  const b = map.getBounds();
+  const bbox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].map(x => x.toFixed(5)).join(',');
+  try {
+    threadPins = await db.threads(bbox, request.signal);
+    renderThreadDots();
+  } catch (e) {
+    if (!request.signal.aborted) console.warn('loading Champt threads failed:', e);
+  }
+}
+map.on('moveend', refreshThreads);
+map.on('zoomend', renderThreadDots);
+
+// The threads under a tap. On a touch screen a dot also answers a tap up to
+// 24 px away, a 48 px target as a fingertip needs, nearest ring first, so a
+// tap right on a dot opens that one alone.
+function threadsAt(point) {
+  const r = dotRadius();
+  for (const pad of matchMedia('(pointer: coarse)').matches ? [0, 8, 16, 24] : [0]) {
+    const found = threadPins.filter(p => map.latLngToContainerPoint([p.lat, p.lng]).distanceTo(point) <= r + pad);
+    if (found.length) return found;
+  }
+  return [];
+}
+map.on('click', e => {
+  const found = threadsAt(e.containerPoint);
+  if (found.length === 1) openThread(found[0].id);
+  else if (found.length > 1) openThreadPicks(found);
+});
+
+function showThreadPanel(label, body, foot = '') {
+  threadLabel.innerHTML = label;
+  threadBody.innerHTML = body;
+  threadBody.scrollTop = 0;
+  threadFoot.innerHTML = foot;
+  threadFoot.hidden = !foot;
+  threadPanel.hidden = false;
+}
+function closeThreadPanel() {
+  threadPanel.hidden = true;
+  shownThread = null;
+  renderThreadDots();
+}
+document.getElementById('threadClose').addEventListener('click', closeThreadPanel);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !threadPanel.hidden) closeThreadPanel();
+});
+
+// Several threads on one spot: a list to pick from.
+function openThreadPicks(pins) {
+  shownThread = null;
+  renderThreadDots();
+  showThreadPanel(`<span class="eyebrow">${pins.length} threads here</span>`, pins.map(p => `
+    <button type="button" class="threadPick" data-id="${p.id}">
+      <span class="threadPreview">${esc(p.preview)}</span>
+      <span class="eyebrow">${p.messages} message${p.messages === 1 ? '' : 's'} · ${esc(timeLeft(p.expires_at))}</span>
+    </button>`).join(''));
+  threadBody.querySelectorAll('.threadPick').forEach(b =>
+    b.addEventListener('click', () => openThread(+b.dataset.id)));
+}
+
+async function openThread(id) {
+  shownThread = id;
+  renderThreadDots();
+  showThreadPanel('<span class="eyebrow">Thread</span>', '<p class="eyebrow threadState">Loading…</p>');
+  let thread;
+  try {
+    thread = await db.thread(id);
+  } catch (e) {
+    if (shownThread !== id) return; // another thread has been opened since
+    const text = e instanceof ApiError ? e.message : 'Could not reach Champt. Check your connection and try again.';
+    const gone = e.status === 404 ? '<span>A thread goes after 24 hours unless someone else replies.</span>' : '';
+    showThreadPanel('<span class="eyebrow">Thread</span>', `<div class="threadState"><strong>${esc(text)}</strong>${gone}</div>`);
+    return;
+  }
+  if (shownThread !== id) return;
+  const n = thread.messages.length;
+  showThreadPanel(
+    `<span class="eyebrow">${n} message${n === 1 ? '' : 's'}</span><span class="liveChip">${esc(timeLeft(thread.expires_at))}</span>`,
+    `<ol class="threadMessages">${thread.messages.map(messageHtml).join('')}</ol>`,
+    `<p>Champt threads are read only here.</p>
+     <a href="${CHAMPT}/t/${thread.id}" target="_blank" rel="noopener">Reply on Champt</a>`);
+  threadBody.scrollTop = threadBody.scrollHeight; // the latest message, as Champt opens a thread
+}
+
+// Champt takes media only from YourImageShare, and this page shows only that:
+// a link from anywhere else stays off it.
+const CHAMPT_MEDIA = 'https://yourimageshare.com/ib/';
+function messageHtml(m) {
+  const media = m.media && m.media.url.startsWith(CHAMPT_MEDIA) ? m.media : null;
+  const shown = !media ? ''
+    : media.kind === 'video'
+      ? `<video class="threadMedia" src="${esc(media.url)}" controls playsinline preload="metadata"
+           onerror="mediaMissing(this, 'video')"></video>`
+      : `<a href="${esc(media.url)}" target="_blank" rel="noopener noreferrer" title="Open full size"><img
+           class="threadMedia" src="${esc(media.url)}" alt="Photo" loading="lazy"
+           onerror="mediaMissing(this.parentNode, 'photo')"></a>`;
+  return `<li>
+    <div class="threadWho">
+      ${m.avatar ? `<img src="${esc(CHAMPT + m.avatar)}" alt="" onerror="this.remove()">` : ''}
+      <strong>${esc(m.author_name)}</strong>
+      <time class="eyebrow" datetime="${esc(m.created_at)}">${timeAgo(Date.parse(m.created_at))}</time>
+    </div>
+    ${m.body ? `<p class="threadText">${esc(m.body)}</p>` : ''}
+    ${shown}
+  </li>`;
+}
+// A photo or video its uploader has deleted since.
+function mediaMissing(el, what) {
+  el.outerHTML = `<p class="threadMedia">This ${what} isn't available.</p>`;
 }
 
 /* ============================================================
@@ -1607,6 +1911,7 @@ db.formats()
   .then(formats => { FORMATS = formats; buildStickerSwitch(); })
   .catch(e => console.warn('loading sticker formats failed:', e));
 locateAndCenter(true);
+refreshThreads(); // for the view the map opened on; every move after asks again
 // Fallback only: geolocation answering (or failing) calls refreshNow(), which
 // clears this timer. It fires solely when the fix is still pending at the deadline.
 refreshTimer = setTimeout(refreshNearby, INITIAL_FETCH_MS);

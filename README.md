@@ -16,6 +16,7 @@ LTA publishes bicycle *rack* locations, but nothing maps the individual QR stick
 - **Riding with** — pick the operator you're riding with, and the map leaves out stickers that can't end your ride.
 - **Report** — stand next to a sticker, scan it with your camera (or type the code), and submit. Your GPS position is attached to the report.
 - **Self-correcting** — every report of the same code is stored separately, and the pin you see is the **median** of all of them. One person's bad GPS fix gets outvoted as more people report the same sticker; the pin gets more accurate over time rather than being overwritten by whoever reported last.
+- **Champt threads** — the orange dots are threads from [Champt](https://champt.vercel.app): chat pinned to places, each gone after 24 hours unless someone else replies. Tap one to read it, signed in or not; several on one spot open as a list. Replying happens on Champt, which the thread links to.
 - **Chip in** — the footer opens a PayNow QR any Singapore bank app can scan, for any amount, with a card option for everyone else.
 
 ### Whose sticker is it
@@ -43,6 +44,7 @@ scripts/export.py      the one-time export from Aero's Firestore, at the move
 - **Data** lives in MongoDB Atlas. The API is the only client; the browser never sees a connection string.
 - **Sign-in** is [Login with Aero](https://aero.oops.wtf/connect): Aero's consent screen sends the browser back to `/auth/aero` with an encrypted token (PASETO `v4.local`) holding the visitor's email. The page keeps it as an opaque string and sends it as a bearer token; the API decrypts it on each call. The page takes the token out of the address bar before anything else runs, analytics included.
 - **Geo queries** use MongoDB's `2dsphere` index: `$geoNear` returns the stickers within the map's radius, nearest first, with their distances.
+- **Champt's threads** come straight from Champt's API, in the browser: Champt lets this site's page read them by listing `https://sg-bike-qr.vercel.app` in its `ALLOWED_ORIGINS`. Those requests carry nothing of this page's, its sign-in included, and Champt answers them with reads only. The page draws the dots and the thread as Champt does, in plain JavaScript.
 - **The PayNow QR** is a static file, `public/paynow.png`, which [`scripts/paynow-qr.mjs`](scripts/paynow-qr.mjs) makes at build time from `PAYNOW_NUMBER`. The number lives in the deployment's environment rather than in this public repository (the PNG is gitignored), and the page shows the code alone, not the number. It is a static PayNow code that leaves the amount to the payer and marks the transfer `DONATION`. Without the variable no QR is made, and the sheet offers the card link only.
 
 ### Data model
@@ -72,11 +74,12 @@ Loaded from a CDN or called at runtime; nothing is vendored:
 - [Nominatim](https://nominatim.org/) for place-name search — debounced, capped at one in-flight request, and cached per session to stay within their usage policy
 - The browser's native `BarcodeDetector` for QR scanning — no scanning library. It isn't available on iOS Safari, which is why manual entry is always present rather than a fallback you have to find.
 - Google Analytics, the same property Aero reports into
+- [Champt](https://github.com/aeroxy/champt)'s API for the threads on the map. A thread's photos and videos load from YourImageShare, where Champt keeps them, and only from there; avatars load from Champt
 - [`qrcode`](https://www.npmjs.com/package/qrcode), at build time only, for the PayNow QR
 
 ## Local development
 
-Open `public/index.html` straight from disk and it runs on built-in sample data near Raffles Place: enough to exercise the map, pins, popups, search, the sticker switch, validation and the median maths without a server. A banner makes it obvious that nothing is being saved.
+Open `public/index.html` straight from disk and it runs on built-in sample data near Raffles Place: enough to exercise the map, pins, popups, search, the sticker switch, validation, the median maths and Champt's threads without a server. A banner makes it obvious that nothing is being saved.
 
 The page and the API together, against the database in `.env`:
 
@@ -88,7 +91,7 @@ cargo run --bin dev        # http://127.0.0.1:8787
 cargo test
 ```
 
-That database is the real one, so mind what you report. Signing in ends at the deployed callback, so the local page can't sign in by itself.
+That database is the real one, so mind what you report. Signing in ends at the deployed callback, so the local page can't sign in by itself. Champt's threads show there only once Champt's `ALLOWED_ORIGINS` lists `http://127.0.0.1:8787` too.
 
 ## Deploying
 
